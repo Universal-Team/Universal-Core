@@ -24,13 +24,29 @@
 *         reasonable ways as different from the original version.
 */
 
-#ifndef SCREENCOMMON_HPP
-#define SCREENCOMMON_HPP
+#ifndef STRUCTS_HPP
+#define STRUCTS_HPP
 
-#include "gui.hpp"
-#include "structs.hpp"
+#include <string>
 
-extern C3D_RenderTarget* Top;
-extern C3D_RenderTarget* Bottom;
+class Structs
+{
+public:
+	struct ButtonPos {
+		int x;
+		int y;
+		int w;
+		int h;
+	};
+
+	struct Key {
+		std::string character;
+		int x;
+		int y;
+		int w;
+	};
+
+private:
+};
 
 #endif
