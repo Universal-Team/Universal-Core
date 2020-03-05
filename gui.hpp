@@ -40,7 +40,7 @@ namespace Gui
 	void clearTextBufs(void);
 
 	// Draw a sprite from a sheet.
-	void DrawSprite(C2D_SpriteSheet sheet, size_t imgindex, int x, int y, float ScaleX = 1, float ScaleY = 1);
+	void DrawSprite(C2D_SpriteSheet sheet, size_t imgindex, int x, int y, float ScaleX = 1, float ScaleY = 1, u32 tintColor = C2D_Color32(0, 0, 0, 0));
 
 	// Initialize the GUI with Citro2D & Citro3D and initialize the Textbuffer.
 	Result init(void);
