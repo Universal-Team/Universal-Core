@@ -44,16 +44,9 @@ void Gui::clearTextBufs(void)
 }
 
 // Draw a sprite from the sheet.
-void Gui::DrawSprite(C2D_SpriteSheet sheet, size_t imgindex, int x, int y, float ScaleX, float ScaleY, u32 tintColor)
+void Gui::DrawSprite(C2D_SpriteSheet sheet, size_t imgindex, int x, int y, float ScaleX, float ScaleY)
 {
-	// Tint sprite.
-	C2D_ImageTint tint;
-	C2D_SetImageTint(&tint, C2D_TopLeft, tintColor, 1);
-	C2D_SetImageTint(&tint, C2D_TopRight, tintColor, 1);
-	C2D_SetImageTint(&tint, C2D_BotLeft, tintColor, 1);
-	C2D_SetImageTint(&tint, C2D_BotRight, tintColor, 1);
-	C2D_Image img = C2D_SpriteSheetGetImage(sheet, imgindex);
-	C2D_DrawImageAt(img, x, y, 0.5f, &tint, ScaleX, ScaleY);
+	C2D_DrawImageAt(C2D_SpriteSheetGetImage(sheet, imgindex), x, y, 0.5f, nullptr, ScaleX, ScaleY);
 }
 
 // Initialize GUI.
