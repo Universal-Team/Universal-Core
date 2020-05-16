@@ -30,6 +30,7 @@
 #include <3ds.h>
 
 C3D_RenderTarget* Top;
+C3D_RenderTarget* TopRight;
 C3D_RenderTarget* Bottom;
 
 C2D_TextBuf TextBuf;
@@ -57,6 +58,7 @@ Result Gui::init(void)
 	C2D_Prepare();
 	// Create Screen Targets.
 	Top = C2D_CreateScreenTarget(GFX_TOP, GFX_LEFT);
+	TopRight = C2D_CreateScreenTarget(GFX_TOP, GFX_RIGHT);
 	Bottom = C2D_CreateScreenTarget(GFX_BOTTOM, GFX_LEFT);
 	// Load Textbuffer.
 	TextBuf = C2D_TextBufNew(4096);
@@ -188,7 +190,7 @@ void Gui::screenBack()
 void Gui::ScreenDraw(C3D_RenderTarget * screen)
 {
 	C2D_SceneBegin(screen);
-	currentScreen = screen == Top ? 1 : 0;
+	currentScreen = (screen==Top || screen==TopRight) ? 1 : 0;
 }
 
 void Gui::drawGrid(float xPos, float yPos, float Width, float Height, u32 color)
