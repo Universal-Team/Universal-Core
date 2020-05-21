@@ -53,16 +53,16 @@ namespace Gui
 	Result init(void);
 
 	/*	Load a Font. (BCFNT)
-	*	sysFont: Whether the system font should be loaded instead of custom Font.
+	*	fnt: The C2D_Font variable which should be initialized.
 	*	Path: Path to the BCFNT file.
-	*	if you're unsure, just call 'Gui::loadFont();' and it will load the system font.
+	*	if you're unsure, just call 'Gui::init();' and it will load the system font.
 	*/
-	Result loadFont(bool sysFont = true, const char * Path = "");
+	Result loadFont(C2D_Font &fnt, const char * Path = "");
 
 	/*	Unload a Font. (BCFNT)
-	*	Only use this if a custom Font has been loaded.
+	*	fnt: The C2D_Font variable which should be unloaded.
 	*/
-	Result unloadFont();
+	Result unloadFont(C2D_Font &fnt);
 
 	/*	Load a spritesheet.
 	*	Path: Path to the SpriteSheet file. (T3X)
@@ -86,8 +86,9 @@ namespace Gui
 	*	Text: The Text which should be displayed.
 	*	maxWidth: The maxWidth for the Text. (Optional!)
 	*	maxHeight: The maxHeight of the Text. (Optional!)
+	*	fnt: The Font which should be used. Uses SystemFont by default. (Optional!)
 	*/
-	void DrawStringCentered(float x, float y, float size, u32 color, std::string Text, int maxWidth = 0, int maxHeight = 0);
+	void DrawStringCentered(float x, float y, float size, u32 color, std::string Text, int maxWidth = 0, int maxHeight = 0, C2D_Font fnt = nullptr);
 
 	/*	Draws a String.
 	*	x: The X Position where the Text should be drawn.
@@ -97,28 +98,32 @@ namespace Gui
 	*	Text: The Text which should be displayed.
 	*	maxWidth: The maxWidth for the Text. (Optional!)
 	*	maxHeight: The maxHeight of the Text. (Optional!)
+	*	fnt: The Font which should be used. Uses SystemFont by default. (Optional!)
 	*/
-	void DrawString(float x, float y, float size, u32 color, std::string Text, int maxWidth = 0, int maxHeight = 0);
+	void DrawString(float x, float y, float size, u32 color, std::string Text, int maxWidth = 0, int maxHeight = 0, C2D_Font fnt = nullptr);
 
 	/*	Get the width of a String.
 	*	size: The size of the Text.
 	*	Text: The Text where the width should be getted from.
+	*	fnt: The Font which should be used. Uses SystemFont by default. (Optional!)
 	*/
-	float GetStringWidth(float size, std::string Text);
+	float GetStringWidth(float size, std::string Text, C2D_Font fnt = nullptr);
 
 	/*	Get the size of a String.
 	*	size: The size of the Text.
 	*	width: The width of the Text.
 	*	height: The height of the Text.
 	*	Text: The Text where the size should be getted from.
+	*	fnt: The Font which should be used. Uses SystemFont by default. (Optional!)
 	*/
-	void GetStringSize(float size, float *width, float *height, std::string Text);
+	void GetStringSize(float size, float *width, float *height, std::string Text, C2D_Font fnt = nullptr);
 
 	/*	Get the height of a String.
 	*	size: The size of the Text.
 	*	Text: The Text where the height should be getted from.
+	*	fnt: The Font which should be used. Uses SystemFont by default. (Optional!)
 	*/
-	float GetStringHeight(float size, std::string Text);
+	float GetStringHeight(float size, std::string Text, C2D_Font fnt = nullptr);
 
 	/*	Draw a Rectangle.
 	*	x: X Position of the Rectangle.

@@ -62,23 +62,20 @@ Result Gui::init(void) {
 	Bottom = C2D_CreateScreenTarget(GFX_BOTTOM, GFX_LEFT);
 	// Load Textbuffer.
 	TextBuf = C2D_TextBufNew(4096);
+	Font = C2D_FontLoadSystem(CFG_REGION_USA); // Load System font.
 	return 0;
 }
 
 // Load a Font.
-Result Gui::loadFont(bool sysFont, const char* Path) {
-	if (sysFont) {
-		Font = C2D_FontLoadSystem(CFG_REGION_USA);
-	} else {
-		if (access(Path, F_OK) == 0)	Font = C2D_FontLoad(Path); // Only load if found.
-	}
+Result Gui::loadFont(C2D_Font &fnt, const char* Path) {
+	if (access(Path, F_OK) == 0)	fnt = C2D_FontLoad(Path); // Only load if found.
 	return 0;
 }
 
 // Unload a Font.
-Result Gui::unloadFont() {
-	if (Font != nullptr) {
-		C2D_FontFree(Font); // Make sure to only unload if not nullptr.
+Result Gui::unloadFont(C2D_Font &fnt) {
+	if (fnt != nullptr) {
+		C2D_FontFree(fnt); // Make sure to only unload if not nullptr.
 	}
 	return 0;
 }
@@ -103,67 +100,136 @@ void Gui::exit(void) {
 }
 
 // Draw a Centered String.
-void Gui::DrawStringCentered(float x, float y, float size, u32 color, std::string Text, int maxWidth, int maxHeight) {
+void Gui::DrawStringCentered(float x, float y, float size, u32 color, std::string Text, int maxWidth, int maxHeight, C2D_Font fnt) {
 	float lineHeight, widthScale;
-	lineHeight = Gui::GetStringHeight(size, " ");
+
+	// Check for the lineHeight.
+	if (fnt != nullptr) {
+		lineHeight = Gui::GetStringHeight(size, " ", fnt);
+	} else {
+		lineHeight = Gui::GetStringHeight(size, " ");
+	}
+
 	int line = 0;
 	while(Text.find('\n') != Text.npos) {
 		if (maxWidth == 0) {
-			widthScale = Gui::GetStringWidth(size, Text.substr(0, Text.find('\n')));
+			// Do the widthScale.
+			if (fnt != nullptr) {
+				widthScale = Gui::GetStringWidth(size, Text.substr(0, Text.find('\n')), fnt);
+			} else {
+				widthScale = Gui::GetStringWidth(size, Text.substr(0, Text.find('\n')));
+			}
+
 		} else {
-			widthScale = std::min((float)maxWidth, Gui::GetStringWidth(size, Text.substr(0, Text.find('\n'))));
+			// Do the widthScale 2.
+			if (fnt != nullptr) {
+				widthScale = std::min((float)maxWidth, Gui::GetStringWidth(size, Text.substr(0, Text.find('\n')), fnt));
+			} else {
+				widthScale = std::min((float)maxWidth, Gui::GetStringWidth(size, Text.substr(0, Text.find('\n'))));
+			}
+
 		}
-		Gui::DrawString((currentScreen ? 200 : 160)+x-(widthScale/2), y+(lineHeight*line), size, color, Text.substr(0, Text.find('\n')), maxWidth, maxHeight);
+
+		if (fnt != nullptr) {
+			Gui::DrawString((currentScreen ? 200 : 160)+x-(widthScale/2), y+(lineHeight*line), size, color, Text.substr(0, Text.find('\n')), maxWidth, maxHeight, fnt);
+		} else {
+			Gui::DrawString((currentScreen ? 200 : 160)+x-(widthScale/2), y+(lineHeight*line), size, color, Text.substr(0, Text.find('\n')), maxWidth, maxHeight);
+		}
+
 		Text = Text.substr(Text.find('\n')+1);
 		line++;
 	}
+
 	if (maxWidth == 0) {
-		widthScale = Gui::GetStringWidth(size, Text.substr(0, Text.find('\n')));
+		// Do the next WidthScale.
+		if (fnt != nullptr) {
+			widthScale = Gui::GetStringWidth(size, Text.substr(0, Text.find('\n')), fnt);
+		} else {
+			widthScale = Gui::GetStringWidth(size, Text.substr(0, Text.find('\n')));
+		}
+
 	} else {
-		widthScale = std::min((float)maxWidth, Gui::GetStringWidth(size, Text.substr(0, Text.find('\n'))));
+		// And again.
+		if (fnt != nullptr) {
+			widthScale = std::min((float)maxWidth, Gui::GetStringWidth(size, Text.substr(0, Text.find('\n')), fnt));
+		} else {
+			widthScale = std::min((float)maxWidth, Gui::GetStringWidth(size, Text.substr(0, Text.find('\n'))));
+		}
+
 	}
-	Gui::DrawString((currentScreen ? 200 : 160)+x-(widthScale/2), y+(lineHeight*line), size, color, Text.substr(0, Text.find('\n')), maxWidth, maxHeight);
+	if (fnt != nullptr) {
+		Gui::DrawString((currentScreen ? 200 : 160)+x-(widthScale/2), y+(lineHeight*line), size, color, Text.substr(0, Text.find('\n')), maxWidth, maxHeight, fnt);
+	} else {
+		Gui::DrawString((currentScreen ? 200 : 160)+x-(widthScale/2), y+(lineHeight*line), size, color, Text.substr(0, Text.find('\n')), maxWidth, maxHeight);
+	}
 }
 
 // Draw String or Text.
-void Gui::DrawString(float x, float y, float size, u32 color, std::string Text, int maxWidth, int maxHeight) {
+void Gui::DrawString(float x, float y, float size, u32 color, std::string Text, int maxWidth, int maxHeight, C2D_Font fnt) {
 	C2D_Text c2d_text;
-	C2D_TextFontParse(&c2d_text, Font, TextBuf, Text.c_str());
+
+	if (fnt != nullptr) {
+		C2D_TextFontParse(&c2d_text, fnt, TextBuf, Text.c_str());
+	} else {
+		C2D_TextFontParse(&c2d_text, Font, TextBuf, Text.c_str());
+	}
+
 	C2D_TextOptimize(&c2d_text);
 
 	float heightScale;
 	if (maxHeight == 0) {
 		heightScale = size;
 	} else {
-		heightScale = std::min(size, size*(maxHeight/Gui::GetStringHeight(size, Text)));
+		
+		if (fnt != nullptr) {
+			heightScale = std::min(size, size*(maxHeight/Gui::GetStringHeight(size, Text, fnt)));
+		} else {
+			heightScale = std::min(size, size*(maxHeight/Gui::GetStringHeight(size, Text)));
+		}
 	}
 
 	if (maxWidth == 0) {
 		C2D_DrawText(&c2d_text, C2D_WithColor, x, y, 0.5f, size, heightScale, color);
 	} else {
-		C2D_DrawText(&c2d_text, C2D_WithColor, x, y, 0.5f, std::min(size, size*(maxWidth/Gui::GetStringWidth(size, Text))), heightScale, color);
+		if (fnt != nullptr) {
+			C2D_DrawText(&c2d_text, C2D_WithColor, x, y, 0.5f, std::min(size, size*(maxWidth/Gui::GetStringWidth(size, Text, fnt))), heightScale, color);
+		} else {
+			C2D_DrawText(&c2d_text, C2D_WithColor, x, y, 0.5f, std::min(size, size*(maxWidth/Gui::GetStringWidth(size, Text))), heightScale, color);
+		}
 	}
 }
 
 // Get String or Text Width.
-float Gui::GetStringWidth(float size, std::string Text) {
+float Gui::GetStringWidth(float size, std::string Text, C2D_Font fnt) {
 	float width = 0;
-	GetStringSize(size, &width, NULL, Text);
+	if (fnt != nullptr) {
+		GetStringSize(size, &width, NULL, Text, fnt);
+	} else {
+		GetStringSize(size, &width, NULL, Text);
+	}
 	return width;
 }
 
 // Get String or Text Size.
-void Gui::GetStringSize(float size, float *width, float *height, std::string Text) {
+void Gui::GetStringSize(float size, float *width, float *height, std::string Text, C2D_Font fnt) {
 	C2D_Text c2d_text;
-	C2D_TextFontParse(&c2d_text, Font, TextBuf, Text.c_str());
+	if (fnt != nullptr) {
+		C2D_TextFontParse(&c2d_text, fnt, TextBuf, Text.c_str());
+	} else {
+		C2D_TextFontParse(&c2d_text, Font, TextBuf, Text.c_str());
+	}
 	C2D_TextGetDimensions(&c2d_text, size, size, width, height);
 }
 
 
 // Get String or Text Height.
-float Gui::GetStringHeight(float size, std::string Text) {
+float Gui::GetStringHeight(float size, std::string Text, C2D_Font fnt) {
 	float height = 0;
-	GetStringSize(size, NULL, &height, Text.c_str());
+	if (fnt != nullptr) {
+		GetStringSize(size, NULL, &height, Text.c_str(), fnt);
+	} else {
+		GetStringSize(size, NULL, &height, Text.c_str());
+	}
 	return height;
 }
 
