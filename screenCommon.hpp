@@ -24,8 +24,8 @@
 *         reasonable ways as different from the original version.
 */
 
-#ifndef SCREENCOMMON_HPP
-#define SCREENCOMMON_HPP
+#ifndef _UNIVERSAL_CORE_SCREENCOMMON_HPP
+#define _UNIVERSAL_CORE_SCREENCOMMON_HPP
 
 #include "gui.hpp"
 #include "structs.hpp"

@@ -24,29 +24,46 @@
 *         reasonable ways as different from the original version.
 */
 
-#ifndef HID_HPP
-#define HID_HPP
+#ifndef _UNIVERSAL_CORE_HID_HPP
+#define _UNIVERSAL_CORE_HID_HPP
 
 #include <cstddef>
 
 class HID
 {
 public:
-	// The parameters to initialize this class.
+
+	/*	The parameters to initialize this class.
+	*	EntryPage: The entries per page.
+	*	EntryAmount: The amount of entries.
+	*/
 	HID(size_t EntryPerPage, size_t EntryAmount);
-	// get the current index.
+
+	/*	Get the current index.
+	*	returns the current index as a size_t.
+	*/
 	size_t getIndex();
-	// get the max amount of the index.
+
+	/*	Get the max amount of the entries per page.
+	*	returns the max amount of entries per page as a size_t.
+	*/
 	size_t getMaxEntries();
+
 	// Go to the next Entry, if maxEntries is not reached.
 	void nextEntry();
+
 	// Go to the last Entry, if 0 is not reached.
 	void lastEntry();
+
 	// Go to the next Page.
 	void nextPage();
+
 	// Go to the previous Page.
 	void prevPage();
-	// Get the current page.
+
+	/*	Get the current page.
+	*	returns the current page as a size_t.
+	*/
 	size_t getPage();
 
 private:

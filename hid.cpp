@@ -27,49 +27,35 @@
 #include "hid.hpp"
 
 HID::HID(size_t EntryPerPage, size_t EntryAmount) {
-	maxEntries = EntryAmount;
-	pageEntry = EntryPerPage;
+	this->maxEntries = EntryAmount;
+	this->pageEntry = EntryPerPage;
 }
 
-size_t HID::getIndex() {
-	return currentEntry;
-}
+size_t HID::getIndex() { return this->currentEntry; }
 
-size_t HID::getMaxEntries() {
-	return maxEntries;
-}
+size_t HID::getMaxEntries() { return this->maxEntries; }
 
-void HID::nextEntry() {
-	if (currentEntry < maxEntries-1) {
-		currentEntry++;
-	}
-}
+void HID::nextEntry() { if (this->currentEntry < this->maxEntries-1)	this->currentEntry++; }
 
-void HID::lastEntry() {
-	if (currentEntry > 0) {
-		currentEntry--;
-	}
-}
+void HID::lastEntry() { if (this->currentEntry > 0)	this->currentEntry--; }
 
 void HID::nextPage() {
 	// Only go to the next page, if the next Page doesn't reach the maxEntries.
-	if (currentEntry + pageEntry < maxEntries - 1) {
-		currentPage++;
-		currentEntry += pageEntry;
+	if (this->currentEntry + this->pageEntry < this->maxEntries - 1) {
+		this->currentPage++;
+		this->currentEntry += this->pageEntry;
 		// If the first index of the page is smaller than maxEntries -> Go to the next page.
-	} else if (currentPage * pageEntry < maxEntries - 1) {
-		currentPage++;
-		currentEntry = currentPage * pageEntry;
+	} else if (this->currentPage * this->pageEntry < this->maxEntries - 1) {
+		this->currentPage++;
+		this->currentEntry = this->currentPage * this->pageEntry;
 	}
 }
 
-size_t HID::getPage() {
-	return currentPage;
-}
+size_t HID::getPage() { return this->currentPage; }
 
 void HID::prevPage() {
-	if (currentPage > 0) {
-		currentPage--;
-		currentEntry -= pageEntry;
+	if (this->currentPage > 0) {
+		this->currentPage--;
+		this->currentEntry -= this->pageEntry;
 	}
 }

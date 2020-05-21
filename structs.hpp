@@ -24,8 +24,8 @@
 *         reasonable ways as different from the original version.
 */
 
-#ifndef STRUCTS_HPP
-#define STRUCTS_HPP
+#ifndef _UNIVERSAL_CORE_STRUCTS_HPP
+#define _UNIVERSAL_CORE_STRUCTS_HPP
 
 #include <string>
 

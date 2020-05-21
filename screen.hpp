@@ -24,8 +24,8 @@
 *         reasonable ways as different from the original version.
 */
 
-#ifndef SCREEN_HPP
-#define SCREEN_HPP
+#ifndef _UNIVERSAL_CORE_SCREEN_HPP
+#define _UNIVERSAL_CORE_SCREEN_HPP
 
 #include <3ds.h>
 #include <memory>
