@@ -33,5 +33,9 @@
 extern C3D_RenderTarget* Top;
 extern C3D_RenderTarget* TopRight;
 extern C3D_RenderTarget* Bottom;
+extern bool fadeout;
+extern bool fadein;
+extern int fadealpha;
+extern int fadecolor;
 
 #endif

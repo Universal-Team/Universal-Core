@@ -139,8 +139,9 @@ namespace Gui {
 	*	hDown: the hidKeysDown() variable.
 	*	hHeld: the HidKeysHeld() variable.
 	*	touch: The TouchPosition variable.
+	*	waitFade: Wheter to wait until the fade ends.
 	*/
-	void ScreenLogic(u32 hDown, u32 hHeld, touchPosition touch);
+	void ScreenLogic(u32 hDown, u32 hHeld, touchPosition touch, bool waitFade = true);
 
 	/*	Used for the current Screen's Constructor call. (Optional!)
 	*	This is useful if you need to call the screen's constructor.
@@ -156,7 +157,13 @@ namespace Gui {
 	*	screen: unique_ptr of the screen. (Optional by using the screen class.)
 	*	screenSwitch: Wheter to switch to the current screen.
 	*/
-	void setScreen(std::unique_ptr<Screen> screen, bool screenSwitch = true);
+	void setScreen(std::unique_ptr<Screen> screen, bool fade = false);
+
+	/* Fades into screens and calls the constructor after it. (Optional!)
+	*	fadeoutFrames: Amount of frames for fadeout.
+	*	fadeinFrames: Amount of frames for fadein.
+	*/
+	void fadeEffects(int fadeoutFrames = 6, int fadeinFrames = 6);
 
 	/*	Set on which screen to draw.
 	*	screen: The render target. (Targets are inside the screenCommon.hpp file.)

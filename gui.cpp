@@ -38,6 +38,10 @@ C2D_TextBuf TextBuf;
 C2D_Font Font;
 std::unique_ptr<Screen> usedScreen, tempScreen; // tempScreen used for "fade" effects.
 bool currentScreen = false;
+bool fadeout = false;
+bool fadein = false;
+int fadealpha = 0;
+int fadecolor = 0;
 
 // Clear Text.
 void Gui::clearTextBufs(void) { C2D_TextBufClear(TextBuf); }
@@ -245,8 +249,14 @@ void Gui::DrawScreen() {
 }
 
 // Do the current screen's logic.
-void Gui::ScreenLogic(u32 hDown, u32 hHeld, touchPosition touch) {
-	if (usedScreen != nullptr)	usedScreen->Logic(hDown, hHeld, touch);
+void Gui::ScreenLogic(u32 hDown, u32 hHeld, touchPosition touch, bool waitFade) {
+	if (waitFade) {
+		if (!fadein && !fadeout) {
+			if (usedScreen != nullptr)	usedScreen->Logic(hDown, hHeld, touch);
+		}
+	} else {
+		if (usedScreen != nullptr)	usedScreen->Logic(hDown, hHeld, touch);
+	}
 }
 
 // Calls the current screen's constructor.
@@ -260,10 +270,38 @@ void Gui::transferScreen() {
 }
 
 // Set the current Screen.
-void Gui::setScreen(std::unique_ptr<Screen> screen, bool screenSwitch) { 
+void Gui::setScreen(std::unique_ptr<Screen> screen, bool fade) { 
 	tempScreen = std::move(screen);
-	if (screenSwitch) {
+	// Switch screen without fade.
+	if (!fade) {
 		Gui::transferScreen();
+	} else {
+		// Fade, then switch.
+		fadeout = true;
+	}
+}
+
+// Fade's the screen in and out and transfer the screen.
+// Credits goes to RocketRobz & SavvyManager.
+void Gui::fadeEffects(int fadeoutFrames, int fadeinFrames) {
+	if (fadein) {
+		fadealpha -= fadeinFrames;
+		if (fadealpha < 0) {
+			fadealpha = 0;
+			fadecolor = 255;
+			fadein = false;
+		}
+	}
+
+	if (fadeout) {
+		fadealpha += fadeoutFrames;
+		if (fadealpha > 255) {
+			fadealpha = 255;
+			Gui::transferScreen(); // Transfer Temp screen to the used one.
+			Gui::CallConstructor(); // Here we call the constructor for the current screen.
+			fadein = true;
+			fadeout = false;
+		}
 	}
 }
 
