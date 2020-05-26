@@ -29,8 +29,7 @@
 
 #include <string>
 
-class Structs
-{
+class Structs {
 public:
 	struct ButtonPos {
 		int x;
@@ -45,8 +44,6 @@ public:
 		int y;
 		int w;
 	};
-
-private:
 };
 
 #endif

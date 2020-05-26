@@ -36,7 +36,7 @@ C3D_RenderTarget* Bottom;
 
 C2D_TextBuf TextBuf;
 C2D_Font Font;
-std::stack<std::unique_ptr<Screen>> screens;
+std::unique_ptr<Screen> usedScreen, tempScreen; // tempScreen used for "fade" effects.
 bool currentScreen = false;
 
 // Clear Text.
@@ -97,6 +97,7 @@ void Gui::exit(void) {
 	C2D_TextBufDelete(TextBuf);
 	C2D_Fini();
 	C3D_Fini();
+	usedScreen = nullptr;
 }
 
 // Draw a Centered String.
@@ -238,24 +239,38 @@ bool Gui::Draw_Rect(float x, float y, float w, float h, u32 color) {
 	return C2D_DrawRectSolid(x, y, 0.5f, w, h, color);
 }
 
-// Mainloop the GUI.
-void Gui::mainLoop(u32 hDown, u32 hHeld, touchPosition touch) {
-	if (!screens.empty()) {
-		screens.top()->Draw();
-		screens.top()->Logic(hDown, hHeld, touch);
-	}
+// Draw's the current screen's draw.
+void Gui::DrawScreen() {
+	if (usedScreen != nullptr)	usedScreen->Draw();
+}
+
+// Do the current screen's logic.
+void Gui::ScreenLogic(u32 hDown, u32 hHeld, touchPosition touch) {
+	if (usedScreen != nullptr)	usedScreen->Logic(hDown, hHeld, touch);
+}
+
+// Calls the current screen's constructor.
+void Gui::CallConstructor() {
+	if (usedScreen != nullptr)	usedScreen->callConstructor();
+}
+
+// Move's the tempScreen to the used one.
+void Gui::transferScreen() {
+	if (tempScreen != nullptr)	usedScreen = std::move(tempScreen);
 }
 
 // Set the current Screen.
-void Gui::setScreen(std::unique_ptr<Screen> screen) { screens.push(std::move(screen)); }
-
-// Go a Screen back.
-void Gui::screenBack() { if (screens.size() > 0)	screens.pop(); }
+void Gui::setScreen(std::unique_ptr<Screen> screen, bool screenSwitch) { 
+	tempScreen = std::move(screen);
+	if (screenSwitch) {
+		Gui::transferScreen();
+	}
+}
 
 // Select, on which Screen should be drawn.
 void Gui::ScreenDraw(C3D_RenderTarget * screen) {
 	C2D_SceneBegin(screen);
-	currentScreen = (screen==Top || screen==TopRight) ? 1 : 0;
+	currentScreen = (screen == Top || screen == TopRight) ? 1 : 0;
 }
 
 void Gui::drawGrid(float xPos, float yPos, float Width, float Height, u32 color) {

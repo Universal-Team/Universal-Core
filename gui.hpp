@@ -32,10 +32,8 @@
 #include <3ds.h>
 #include <citro2d.h>
 #include <citro3d.h>
-#include <stack>
 
-namespace Gui
-{
+namespace Gui {
 	// Clear the Text Buffer.
 	void clearTextBufs(void);
 
@@ -134,20 +132,31 @@ namespace Gui
 	*/
 	bool Draw_Rect(float x, float y, float w, float h, u32 color);
 	
-	/*	Used for the mainLoop to display the screens. (Optional!)
+	//	Used for the current Screen's Draw. (Optional!)
+	void DrawScreen();
+
+	/*	Used for the current Screen's Logic. (Optional!)
 	*	hDown: the hidKeysDown() variable.
 	*	hHeld: the HidKeysHeld() variable.
 	*	touch: The TouchPosition variable.
 	*/
-	void mainLoop(u32 hDown, u32 hHeld, touchPosition touch);
+	void ScreenLogic(u32 hDown, u32 hHeld, touchPosition touch);
 
-	/* Set a specific Screen.
-	*	screen: unique_ptr of the screen. (Optional by using the screen class.)
+	/*	Used for the current Screen's Constructor call. (Optional!)
+	*	This is useful if you need to call the screen's constructor.
 	*/
-	void setScreen(std::unique_ptr<Screen> screen);
+	void CallConstructor();
+	
+	/* Transfer the Temp Screen to the used one. (Optional!)
+	*	It will check, if the tempScreen variable is not nullptr, so don't worry.
+	*/
+	void transferScreen();
 
-	//	Go a Screen back. (Optional by using the screen class.)
-	void screenBack();
+	/*	Set a specific Screen with switch function. (Optional!)
+	*	screen: unique_ptr of the screen. (Optional by using the screen class.)
+	*	screenSwitch: Wheter to switch to the current screen.
+	*/
+	void setScreen(std::unique_ptr<Screen> screen, bool screenSwitch = true);
 
 	/*	Set on which screen to draw.
 	*	screen: The render target. (Targets are inside the screenCommon.hpp file.)

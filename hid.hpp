@@ -29,8 +29,7 @@
 
 #include <cstddef>
 
-class HID
-{
+class HID {
 public:
 
 	/*	The parameters to initialize this class.
