@@ -97,7 +97,7 @@ void Gui::exit(void) {
 	C2D_TextBufDelete(TextBuf);
 	C2D_Fini();
 	C3D_Fini();
-	usedScreen = nullptr;
+	if (usedScreen != nullptr)	usedScreen = nullptr;
 }
 
 // Draw a Centered String.
