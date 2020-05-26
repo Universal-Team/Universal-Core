@@ -142,11 +142,6 @@ namespace Gui {
 	*	waitFade: Wheter to wait until the fade ends.
 	*/
 	void ScreenLogic(u32 hDown, u32 hHeld, touchPosition touch, bool waitFade = true);
-
-	/*	Used for the current Screen's Constructor call. (Optional!)
-	*	This is useful if you need to call the screen's constructor.
-	*/
-	void CallConstructor();
 	
 	/* Transfer the Temp Screen to the used one. (Optional!)
 	*	It will check, if the tempScreen variable is not nullptr, so don't worry.

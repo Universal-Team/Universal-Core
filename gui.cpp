@@ -259,11 +259,6 @@ void Gui::ScreenLogic(u32 hDown, u32 hHeld, touchPosition touch, bool waitFade) 
 	}
 }
 
-// Calls the current screen's constructor.
-void Gui::CallConstructor() {
-	if (usedScreen != nullptr)	usedScreen->callConstructor();
-}
-
 // Move's the tempScreen to the used one.
 void Gui::transferScreen() {
 	if (tempScreen != nullptr)	usedScreen = std::move(tempScreen);
@@ -298,7 +293,6 @@ void Gui::fadeEffects(int fadeoutFrames, int fadeinFrames) {
 		if (fadealpha > 255) {
 			fadealpha = 255;
 			Gui::transferScreen(); // Transfer Temp screen to the used one.
-			Gui::CallConstructor(); // Here we call the constructor for the current screen.
 			fadein = true;
 			fadeout = false;
 		}
