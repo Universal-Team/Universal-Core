@@ -28,6 +28,7 @@
 #include "screenCommon.hpp"
 
 #include <3ds.h>
+#include <stack>
 #include <unistd.h>
 
 C3D_RenderTarget* Top;
@@ -37,9 +38,9 @@ C3D_RenderTarget* Bottom;
 C2D_TextBuf TextBuf;
 C2D_Font Font;
 std::unique_ptr<Screen> usedScreen, tempScreen; // tempScreen used for "fade" effects.
+std::stack<std::unique_ptr<Screen>> screens;
 bool currentScreen = false;
-bool fadeout = false;
-bool fadein = false;
+bool fadeout = false, fadein = false, fadeout2 = false, fadein2 = false;
 int fadealpha = 0;
 int fadecolor = 0;
 
@@ -244,32 +245,48 @@ bool Gui::Draw_Rect(float x, float y, float w, float h, u32 color) {
 }
 
 // Draw's the current screen's draw.
-void Gui::DrawScreen() {
-	if (usedScreen != nullptr)	usedScreen->Draw();
+void Gui::DrawScreen(bool stack) {
+	if (!stack) {
+		if (usedScreen != nullptr)	usedScreen->Draw();
+	} else {
+		if (!screens.empty())	screens.top()->Draw();
+	}
 }
 
 // Do the current screen's logic.
-void Gui::ScreenLogic(u32 hDown, u32 hHeld, touchPosition touch, bool waitFade) {
+void Gui::ScreenLogic(u32 hDown, u32 hHeld, touchPosition touch, bool waitFade, bool stack) {
 	if (waitFade) {
-		if (!fadein && !fadeout) {
-			if (usedScreen != nullptr)	usedScreen->Logic(hDown, hHeld, touch);
+		if (!fadein && !fadeout && !fadein2 && !fadeout2) {
+			if (!stack) {
+				if (usedScreen != nullptr)	usedScreen->Logic(hDown, hHeld, touch);
+			} else {
+				if (!screens.empty())	screens.top()->Logic(hDown, hHeld, touch);
+			}
 		}
 	} else {
-		if (usedScreen != nullptr)	usedScreen->Logic(hDown, hHeld, touch);
+		if (!stack) {
+			if (usedScreen != nullptr)	usedScreen->Logic(hDown, hHeld, touch);
+		} else {
+			if (!screens.empty())	screens.top()->Logic(hDown, hHeld, touch);
+		}
 	}
 }
 
 // Move's the tempScreen to the used one.
-void Gui::transferScreen() {
-	if (tempScreen != nullptr)	usedScreen = std::move(tempScreen);
+void Gui::transferScreen(bool stack) {
+	if (!stack) {
+		if (tempScreen != nullptr)	usedScreen = std::move(tempScreen);
+	} else {
+		if (tempScreen != nullptr)	screens.push(std::move(tempScreen));
+	}
 }
 
 // Set the current Screen.
-void Gui::setScreen(std::unique_ptr<Screen> screen, bool fade) { 
+void Gui::setScreen(std::unique_ptr<Screen> screen, bool fade, bool stack) { 
 	tempScreen = std::move(screen);
 	// Switch screen without fade.
 	if (!fade) {
-		Gui::transferScreen();
+		Gui::transferScreen(stack);
 	} else {
 		// Fade, then switch.
 		fadeout = true;
@@ -278,7 +295,7 @@ void Gui::setScreen(std::unique_ptr<Screen> screen, bool fade) {
 
 // Fade's the screen in and out and transfer the screen.
 // Credits goes to RocketRobz & SavvyManager.
-void Gui::fadeEffects(int fadeoutFrames, int fadeinFrames) {
+void Gui::fadeEffects(int fadeoutFrames, int fadeinFrames, bool stack) {
 	if (fadein) {
 		fadealpha -= fadeinFrames;
 		if (fadealpha < 0) {
@@ -288,16 +305,49 @@ void Gui::fadeEffects(int fadeoutFrames, int fadeinFrames) {
 		}
 	}
 
+	if (stack) {
+		if (fadein2) {
+			fadealpha -= fadeinFrames;
+			if (fadealpha < 0) {
+				fadealpha = 0;
+				fadecolor = 255;
+				fadein2 = false;
+			}
+		}
+	}
+
 	if (fadeout) {
 		fadealpha += fadeoutFrames;
 		if (fadealpha > 255) {
 			fadealpha = 255;
-			Gui::transferScreen(); // Transfer Temp screen to the used one.
+			Gui::transferScreen(stack); // Transfer Temp screen to the stack / used one.
 			fadein = true;
 			fadeout = false;
 		}
 	}
+
+	if (stack) {
+		if (fadeout2) {
+			fadealpha += fadeoutFrames;
+			if (fadealpha > 255) {
+				fadealpha = 255;
+				Gui::screenBack2(); // Go screen back.
+				fadein2 = true;
+				fadeout2 = false;
+			}
+		}
+	}
 }
+
+// Go a screen back. (Stack only!)
+void Gui::screenBack(bool fade) {
+	if (!fade) {
+		if (screens.size() > 0)	screens.pop();
+	} else {
+		if (screens.size() > 0)	fadeout2 = true;
+	}
+}
+void Gui::screenBack2() { if (screens.size() > 0)	screens.pop(); }
 
 // Select, on which Screen should be drawn.
 void Gui::ScreenDraw(C3D_RenderTarget * screen) {

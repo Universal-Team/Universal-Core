@@ -133,32 +133,40 @@ namespace Gui {
 	bool Draw_Rect(float x, float y, float w, float h, u32 color);
 	
 	//	Used for the current Screen's Draw. (Optional!)
-	void DrawScreen();
+	//	stack: Is it the stack variant?
+	void DrawScreen(bool stack = false);
 
 	/*	Used for the current Screen's Logic. (Optional!)
 	*	hDown: the hidKeysDown() variable.
 	*	hHeld: the HidKeysHeld() variable.
 	*	touch: The TouchPosition variable.
 	*	waitFade: Wheter to wait until the fade ends.
+	*	stack: Is it the stack variant?
 	*/
-	void ScreenLogic(u32 hDown, u32 hHeld, touchPosition touch, bool waitFade = true);
+	void ScreenLogic(u32 hDown, u32 hHeld, touchPosition touch, bool waitFade = true, bool stack = false);
 	
-	/* Transfer the Temp Screen to the used one. (Optional!)
+	/*	Transfer the Temp Screen to the used one. (Optional!)
+	*	stack: Is it the stack variant?
 	*	It will check, if the tempScreen variable is not nullptr, so don't worry.
 	*/
-	void transferScreen();
+	void transferScreen(bool stack = false);
 
 	/*	Set a specific Screen with switch function. (Optional!)
 	*	screen: unique_ptr of the screen. (Optional by using the screen class.)
 	*	screenSwitch: Wheter to switch to the current screen.
+	*	stack: Is it the stack variant?
 	*/
-	void setScreen(std::unique_ptr<Screen> screen, bool fade = false);
+	void setScreen(std::unique_ptr<Screen> screen, bool fade = false, bool stack = false);
 
 	/* Fades into screens and calls the constructor after it. (Optional!)
 	*	fadeoutFrames: Amount of frames for fadeout.
 	*	fadeinFrames: Amount of frames for fadein.
+	*	stack: Is it the stack variant?
 	*/
-	void fadeEffects(int fadeoutFrames = 6, int fadeinFrames = 6);
+	void fadeEffects(int fadeoutFrames = 6, int fadeinFrames = 6, bool stack = false);
+
+	void screenBack(bool fade = false); // Goes a screen back. (Set!) (Stack only!)
+	void screenBack2(); // Goes a screen back.(Action!) (Stack only!)
 
 	/*	Set on which screen to draw.
 	*	screen: The render target. (Targets are inside the screenCommon.hpp file.)
