@@ -105,6 +105,15 @@ void Gui::exit(void) {
 	if (usedScreen != nullptr)	usedScreen = nullptr;
 }
 
+// Reinitialize GUI.
+Result Gui::reinit(void) {
+	C2D_TextBufDelete(TextBuf);
+	C2D_Fini();
+	C3D_Fini();
+
+	return init();
+}
+
 // Draw a Centered String.
 void Gui::DrawStringCentered(float x, float y, float size, u32 color, std::string Text, int maxWidth, int maxHeight, C2D_Font fnt) {
 	float lineHeight, widthScale;

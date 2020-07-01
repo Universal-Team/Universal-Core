@@ -76,6 +76,9 @@ namespace Gui {
 	// Exit the GUI. (Call this at exit.)
 	void exit(void);
 	
+	// Reinit the GUI.
+	Result reinit(void);
+
 	/*	Draws a centered String.
 	*	x: The X Offset from center. (Center: 200 px on top, 160 px on Bottom.)
 	*	y: The Y Position of the Text.
