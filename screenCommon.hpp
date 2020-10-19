@@ -30,9 +30,7 @@
 #include "gui.hpp"
 #include "structs.hpp"
 
-extern C3D_RenderTarget* Top;
-extern C3D_RenderTarget* TopRight;
-extern C3D_RenderTarget* Bottom;
+extern C3D_RenderTarget *Top, *TopRight, *Bottom;
 extern bool fadeout, fadein, fadeout2, fadein2;
 extern int fadealpha, fadecolor;
 

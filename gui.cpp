@@ -30,10 +30,9 @@
 #include <3ds.h>
 #include <stack>
 #include <unistd.h>
+#include <vector>
 
-C3D_RenderTarget* Top;
-C3D_RenderTarget* TopRight;
-C3D_RenderTarget* Bottom;
+C3D_RenderTarget *Top, *TopRight, *Bottom;
 
 C2D_TextBuf TextBuf;
 C2D_Font Font;
@@ -44,269 +43,430 @@ bool fadeout = false, fadein = false, fadeout2 = false, fadein2 = false;
 int fadealpha = 0;
 int fadecolor = 0;
 
-// Clear Text.
-void Gui::clearTextBufs(void) { C2D_TextBufClear(TextBuf); }
+/*
+	Clear the Text Buffer.
+*/
+void Gui::clearTextBufs(void) { C2D_TextBufClear(TextBuf); };
 
-// Draw a sprite from the sheet.
+/*
+	Draw a sprite from the sheet.
+
+	C2D_SpriteSheet sheet: The SpriteSheet.
+	size_t imgindex: The image index.
+	int x: The X-Position where to draw the sprite.
+	int y: The Y-Position where to draw the sprite.
+	float ScaleX: The X-Scale of the sprite.
+	float ScaleY: The Y-Scale of the sprite.
+
+	If the spritesheet is nullptr or image index goes out of scope, this doesn't do anything.
+*/
 void Gui::DrawSprite(C2D_SpriteSheet sheet, size_t imgindex, int x, int y, float ScaleX, float ScaleY) {
-	if (sheet != nullptr) {
+	if (sheet) {
 		if (C2D_SpriteSheetCount(sheet) >= imgindex) {
 			C2D_DrawImageAt(C2D_SpriteSheetGetImage(sheet, imgindex), x, y, 0.5f, nullptr, ScaleX, ScaleY);
 		}
 	}
 }
 
-// Initialize GUI.
+/*
+	Initialize the GUI.
+
+	Contains initializing Citro2D, Citro3D and the screen targets.
+	Call this when initing the app.
+*/
 Result Gui::init(void) {
 	C3D_Init(C3D_DEFAULT_CMDBUF_SIZE);
 	C2D_Init(C2D_DEFAULT_MAX_OBJECTS);
 	C2D_Prepare();
-	// Create Screen Targets.
+
+	/* Create Screen Targets. */
 	Top = C2D_CreateScreenTarget(GFX_TOP, GFX_LEFT);
 	TopRight = C2D_CreateScreenTarget(GFX_TOP, GFX_RIGHT);
 	Bottom = C2D_CreateScreenTarget(GFX_BOTTOM, GFX_LEFT);
-	// Load Textbuffer.
+
+	/* Load Textbuffer. */
 	TextBuf = C2D_TextBufNew(4096);
 	Font = C2D_FontLoadSystem(CFG_REGION_USA); // Load System font.
 	return 0;
 }
 
-// Load a Font.
-Result Gui::loadFont(C2D_Font &fnt, const char* Path) {
-	if (access(Path, F_OK) == 0)	fnt = C2D_FontLoad(Path); // Only load if found.
+/*
+	Load a bcfnt font.
+
+	C2D_Font &fnt: The reference to the C2D_Font variable.
+	const char *Path: The path to the file.
+*/
+Result Gui::loadFont(C2D_Font &fnt, const char *Path) {
+	if (access(Path, F_OK) == 0) fnt = C2D_FontLoad(Path); // Only load if found.
+
 	return 0;
 }
 
-// Unload a Font.
+/*
+	Unload a Font.
+
+	C2D_Font &fnt: The reference to the C2D_Font variable.
+*/
 Result Gui::unloadFont(C2D_Font &fnt) {
-	if (fnt != nullptr) {
-		C2D_FontFree(fnt); // Make sure to only unload if not nullptr.
-	}
+	if (fnt) C2D_FontFree(fnt); // Make sure to only unload if not nullptr.
+
 	return 0;
 }
 
-// Load a Sheet.
-Result Gui::loadSheet(const char* Path, C2D_SpriteSheet &sheet) {
-	if (access(Path, F_OK) == 0)	sheet = C2D_SpriteSheetLoad(Path); // Only load if found.
+/*
+	Load a t3x SpriteSheet.
+
+	const char *Path: The path to the file.
+	C2D_SpriteSheet &sheet: The reference to the C2D_SpriteSheet variable.
+*/
+Result Gui::loadSheet(const char *Path, C2D_SpriteSheet &sheet) {
+	if (access(Path, F_OK) == 0) sheet = C2D_SpriteSheetLoad(Path); // Only load if found.
+
 	return 0;
 }
 
-// Unload a Sheet.
+/*
+	Unload a SpriteSheet.
+
+	C2D_SpriteSheet &sheet: The reference to the C2D_SpriteSheet variable.
+*/
 Result Gui::unloadSheet(C2D_SpriteSheet &sheet) {
-	if (sheet != nullptr)	C2D_SpriteSheetFree(sheet); // Make sure to only unload if not nullptr.
+	if (sheet) C2D_SpriteSheetFree(sheet); // Make sure to only unload if not nullptr.
+
 	return 0;
 }
 
-// Exit the GUI.
+/*
+	Exit the GUI.
+
+	Contains deinitializing Citro2D, Citro3D and clearing the textbuffer.
+	Call this when exiting the app.
+*/
 void Gui::exit(void) {
 	C2D_TextBufDelete(TextBuf);
 	C2D_Fini();
 	C3D_Fini();
-	if (usedScreen != nullptr)	usedScreen = nullptr;
+	if (usedScreen) usedScreen = nullptr;
 }
 
-// Reinitialize GUI.
+/*
+	Reinitialize the GUI.
+*/
 Result Gui::reinit(void) {
 	C2D_TextBufDelete(TextBuf);
 	C2D_Fini();
 	C3D_Fini();
 
-	return init();
+	return Gui::init();
 }
 
-// Draw a Centered String.
+/*
+	Draw a Centered String.
+
+	float x: The X-Addition offset for the position from 200 (top) or 160 (bottom).
+	float y: The Y-Position where to draw.
+	float size: The size for the Font.
+	u32 color: The Text Color.
+	std::string Text: The Text which should be drawn.
+	int maxWidth: (Optional) The max width of the Text.
+	int maxHeight: (Optional) The max height of the Text.
+	C2D_Font fnt: (Optional) The wanted C2D_Font. Is nullptr by default.
+*/
 void Gui::DrawStringCentered(float x, float y, float size, u32 color, std::string Text, int maxWidth, int maxHeight, C2D_Font fnt) {
 	float lineHeight, widthScale;
 
-	// Check for the lineHeight.
-	if (fnt != nullptr) {
-		lineHeight = Gui::GetStringHeight(size, " ", fnt);
-	} else {
-		lineHeight = Gui::GetStringHeight(size, " ");
-	}
+	/* Check for the lineHeight. */
+	if (fnt) lineHeight = Gui::GetStringHeight(size, " ", fnt);
+	else lineHeight = Gui::GetStringHeight(size, " ");
 
 	int line = 0;
+
 	while(Text.find('\n') != Text.npos) {
 		if (maxWidth == 0) {
-			// Do the widthScale.
-			if (fnt != nullptr) {
-				widthScale = Gui::GetStringWidth(size, Text.substr(0, Text.find('\n')), fnt);
-			} else {
-				widthScale = Gui::GetStringWidth(size, Text.substr(0, Text.find('\n')));
-			}
+			/* Do the widthScale. */
+			if (fnt) widthScale = Gui::GetStringWidth(size, Text.substr(0, Text.find('\n')), fnt);
+			else widthScale = Gui::GetStringWidth(size, Text.substr(0, Text.find('\n')));
 
 		} else {
-			// Do the widthScale 2.
-			if (fnt != nullptr) {
-				widthScale = std::min((float)maxWidth, Gui::GetStringWidth(size, Text.substr(0, Text.find('\n')), fnt));
-			} else {
-				widthScale = std::min((float)maxWidth, Gui::GetStringWidth(size, Text.substr(0, Text.find('\n'))));
-			}
-
+			/* Do the widthScale 2. */
+			if (fnt) widthScale = std::min((float)maxWidth, Gui::GetStringWidth(size, Text.substr(0, Text.find('\n')), fnt));
+			else widthScale = std::min((float)maxWidth, Gui::GetStringWidth(size, Text.substr(0, Text.find('\n'))));
 		}
 
-		if (fnt != nullptr) {
-			Gui::DrawString((currentScreen ? 200 : 160)+x-(widthScale/2), y+(lineHeight*line), size, color, Text.substr(0, Text.find('\n')), maxWidth, maxHeight, fnt);
-		} else {
-			Gui::DrawString((currentScreen ? 200 : 160)+x-(widthScale/2), y+(lineHeight*line), size, color, Text.substr(0, Text.find('\n')), maxWidth, maxHeight);
-		}
+		if (fnt) Gui::DrawString((currentScreen ? 200 : 160)+x-(widthScale/2), y+(lineHeight*line), size, color, Text.substr(0, Text.find('\n')), maxWidth, maxHeight, fnt);
+		else Gui::DrawString((currentScreen ? 200 : 160)+x-(widthScale/2), y+(lineHeight*line), size, color, Text.substr(0, Text.find('\n')), maxWidth, maxHeight);
 
 		Text = Text.substr(Text.find('\n')+1);
 		line++;
 	}
 
 	if (maxWidth == 0) {
-		// Do the next WidthScale.
-		if (fnt != nullptr) {
-			widthScale = Gui::GetStringWidth(size, Text.substr(0, Text.find('\n')), fnt);
-		} else {
-			widthScale = Gui::GetStringWidth(size, Text.substr(0, Text.find('\n')));
-		}
+		/* Do the next WidthScale. */
+		if (fnt) widthScale = Gui::GetStringWidth(size, Text.substr(0, Text.find('\n')), fnt);
+		else widthScale = Gui::GetStringWidth(size, Text.substr(0, Text.find('\n')));
 
 	} else {
-		// And again.
-		if (fnt != nullptr) {
-			widthScale = std::min((float)maxWidth, Gui::GetStringWidth(size, Text.substr(0, Text.find('\n')), fnt));
-		} else {
-			widthScale = std::min((float)maxWidth, Gui::GetStringWidth(size, Text.substr(0, Text.find('\n'))));
-		}
+		/* And again. */
+		if (fnt) widthScale = std::min((float)maxWidth, Gui::GetStringWidth(size, Text.substr(0, Text.find('\n')), fnt));
+		else widthScale = std::min((float)maxWidth, Gui::GetStringWidth(size, Text.substr(0, Text.find('\n'))));
+	}
 
-	}
-	if (fnt != nullptr) {
-		Gui::DrawString((currentScreen ? 200 : 160)+x-(widthScale/2), y+(lineHeight*line), size, color, Text.substr(0, Text.find('\n')), maxWidth, maxHeight, fnt);
-	} else {
-		Gui::DrawString((currentScreen ? 200 : 160)+x-(widthScale/2), y+(lineHeight*line), size, color, Text.substr(0, Text.find('\n')), maxWidth, maxHeight);
-	}
+	if (fnt) Gui::DrawString((currentScreen ? 200 : 160)+x-(widthScale/2), y+(lineHeight*line), size, color, Text.substr(0, Text.find('\n')), maxWidth, maxHeight, fnt);
+	else Gui::DrawString((currentScreen ? 200 : 160)+x-(widthScale/2), y+(lineHeight*line), size, color, Text.substr(0, Text.find('\n')), maxWidth, maxHeight);
 }
 
-// Draw String or Text.
+/*
+	Draw a String.
+
+	float x: The X-Position where to draw.
+	float y: The Y-Position where to draw.
+	float size: The size for the Font.
+	u32 color: The Text Color.
+	std::string Text: The Text which should be drawn.
+	int maxWidth: (Optional) The max width of the Text.
+	int maxHeight: (Optional) The max height of the Text.
+	C2D_Font fnt: (Optional) The wanted C2D_Font. Is nullptr by default.
+*/
 void Gui::DrawString(float x, float y, float size, u32 color, std::string Text, int maxWidth, int maxHeight, C2D_Font fnt) {
 	C2D_Text c2d_text;
 
-	if (fnt != nullptr) {
-		C2D_TextFontParse(&c2d_text, fnt, TextBuf, Text.c_str());
-	} else {
-		C2D_TextFontParse(&c2d_text, Font, TextBuf, Text.c_str());
-	}
+	if (fnt) C2D_TextFontParse(&c2d_text, fnt, TextBuf, Text.c_str());
+	else C2D_TextFontParse(&c2d_text, Font, TextBuf, Text.c_str());
 
 	C2D_TextOptimize(&c2d_text);
 
 	float heightScale;
+
 	if (maxHeight == 0) {
 		heightScale = size;
+
 	} else {
-		
-		if (fnt != nullptr) {
-			heightScale = std::min(size, size*(maxHeight/Gui::GetStringHeight(size, Text, fnt)));
-		} else {
-			heightScale = std::min(size, size*(maxHeight/Gui::GetStringHeight(size, Text)));
-		}
+		if (fnt) heightScale = std::min(size, size*(maxHeight/Gui::GetStringHeight(size, Text, fnt)));
+		else heightScale = std::min(size, size*(maxHeight/Gui::GetStringHeight(size, Text)));
 	}
 
 	if (maxWidth == 0) {
 		C2D_DrawText(&c2d_text, C2D_WithColor, x, y, 0.5f, size, heightScale, color);
+
 	} else {
-		if (fnt != nullptr) {
-			C2D_DrawText(&c2d_text, C2D_WithColor, x, y, 0.5f, std::min(size, size*(maxWidth/Gui::GetStringWidth(size, Text, fnt))), heightScale, color);
-		} else {
-			C2D_DrawText(&c2d_text, C2D_WithColor, x, y, 0.5f, std::min(size, size*(maxWidth/Gui::GetStringWidth(size, Text))), heightScale, color);
-		}
+		if (fnt) C2D_DrawText(&c2d_text, C2D_WithColor, x, y, 0.5f, std::min(size, size*(maxWidth/Gui::GetStringWidth(size, Text, fnt))), heightScale, color);
+		else C2D_DrawText(&c2d_text, C2D_WithColor, x, y, 0.5f, std::min(size, size*(maxWidth/Gui::GetStringWidth(size, Text))), heightScale, color);
 	}
 }
 
-// Get String or Text Width.
+/*
+	Get String or Text Width.
+
+	float size: The Textsize.
+	std::string Text: The Text.
+	C2D_Font fnt: (Optional) The wanted C2D_Font. Is nullptr by default.
+*/
 float Gui::GetStringWidth(float size, std::string Text, C2D_Font fnt) {
 	float width = 0;
-	if (fnt != nullptr) {
-		GetStringSize(size, &width, NULL, Text, fnt);
-	} else {
-		GetStringSize(size, &width, NULL, Text);
-	}
+
+	if (fnt) GetStringSize(size, &width, NULL, Text, fnt);
+	else GetStringSize(size, &width, NULL, Text);
+
 	return width;
 }
 
-// Get String or Text Size.
+/*
+	Get String or Text Size.
+
+	float size: The Textsize.
+	float *width: Pointer where to store the width.
+	float *height: Pointer where to store the height.
+	std::string Text: The Text.
+	C2D_Font fnt: (Optional) The wanted C2D_Font. Is nullptr by default.
+*/
 void Gui::GetStringSize(float size, float *width, float *height, std::string Text, C2D_Font fnt) {
 	C2D_Text c2d_text;
-	if (fnt != nullptr) {
-		C2D_TextFontParse(&c2d_text, fnt, TextBuf, Text.c_str());
-	} else {
-		C2D_TextFontParse(&c2d_text, Font, TextBuf, Text.c_str());
-	}
+
+	if (fnt) C2D_TextFontParse(&c2d_text, fnt, TextBuf, Text.c_str());
+	else C2D_TextFontParse(&c2d_text, Font, TextBuf, Text.c_str());
+
 	C2D_TextGetDimensions(&c2d_text, size, size, width, height);
 }
 
 
-// Get String or Text Height.
+/*
+	Get String or Text Height.
+
+	float size: The Textsize.
+	std::string Text: The Text.
+	C2D_Font fnt: (Optional) The wanted C2D_Font. Is nullptr by default.
+*/
 float Gui::GetStringHeight(float size, std::string Text, C2D_Font fnt) {
 	float height = 0;
-	if (fnt != nullptr) {
-		GetStringSize(size, NULL, &height, Text.c_str(), fnt);
-	} else {
-		GetStringSize(size, NULL, &height, Text.c_str());
-	}
+
+	if (fnt) GetStringSize(size, NULL, &height, Text.c_str(), fnt);
+	else GetStringSize(size, NULL, &height, Text.c_str());
+
 	return height;
 }
 
-// Draw a Rectangle.
+/*
+	Wrap long Text into a string. This code is based of:
+	https://github.com/DS-Homebrew/TWiLightMenu/blob/master/settings/arm9/source/settingsgui.cpp#L151.
+
+	const std::string &text: The Text which should be wrapped.
+	float TextSize: The Textsize.
+	int maxWidth: The max width for wrapping.
+
+	NOTE: Only call this once! This does do a lot of calls with while, for loops etc.
+*/
+std::string Gui::WrapText(const std::string &text, float Textsize, int maxWidth) {
+	std::string result, temp, _resultStr = text;
+	std::vector<std::string> words;
+	std::size_t pos;
+
+	/* Process comment to stay within the maxWidth. */
+	while((pos = _resultStr.find(' ')) != std::string::npos) {
+		words.push_back(_resultStr.substr(0, pos));
+		_resultStr = _resultStr.substr(pos + 1);
+	}
+
+	if (_resultStr.size()) words.push_back(_resultStr);
+
+	for(auto word : words) {
+		/* Split word if the word is too long for a line. */
+		const int width = Gui::GetStringWidth(Textsize, word);
+
+		if (width > maxWidth) {
+			if (temp.length()) {
+				result += temp + "\n";
+				temp = "";
+			}
+
+			for(int i = 0; i < width / maxWidth; i++) {
+				word.insert((float)((i + 1) * word.length()) / ((width / maxWidth) + 1), "\n");
+			}
+
+			result += word + "\n";
+			continue;
+		}
+
+		const int width2 = Gui::GetStringWidth(Textsize, temp + " " + word);
+
+		if (width2 > 240) {
+			result += temp + "\n";
+			temp = word;
+
+		} else {
+			temp += " " + word;
+		}
+	}
+
+	if (temp.size()) result += temp;
+
+	/* Ensure there are no newlines at the beginning or end. */
+	while(result[0] == '\n') result = result.substr(1);
+	while(result[result.length() - 1] == '\n') result = result.substr(0, result.length() - 2);
+
+	return result;
+}
+
+/*
+	Draw a Rectangle.
+
+	float x: The X-Position where to draw.
+	float y: The Y-Position where to draw.
+	float w: The width of the rectangle.
+	float h: The height of the rectangle.
+	u32 color: The color.
+*/
 bool Gui::Draw_Rect(float x, float y, float w, float h, u32 color) {
 	return C2D_DrawRectSolid(x, y, 0.5f, w, h, color);
 }
 
-// Draw's the current screen's draw.
+/*
+	Draw's the current screen's draw.
+
+	bool stack: If using the stack-screens or not.
+*/
 void Gui::DrawScreen(bool stack) {
 	if (!stack) {
-		if (usedScreen != nullptr)	usedScreen->Draw();
+		if (usedScreen) usedScreen->Draw();
+
 	} else {
-		if (!screens.empty())	screens.top()->Draw();
+		if (!screens.empty()) screens.top()->Draw();
 	}
 }
 
-// Do the current screen's logic.
+/*
+	Do the current screen's logic.
+
+	u32 hDown: The hidKeysDown() variable.
+	u32 hHeld: The hidKeysHeld() variable.
+	touchPosition touch: The touchPosition variable.
+	bool waitFade: If waiting for the fade until control of the screen or not.
+	bool stack: If using the stack-screens.
+*/
 void Gui::ScreenLogic(u32 hDown, u32 hHeld, touchPosition touch, bool waitFade, bool stack) {
 	if (waitFade) {
 		if (!fadein && !fadeout && !fadein2 && !fadeout2) {
-			if (!stack) {
-				if (usedScreen != nullptr)	usedScreen->Logic(hDown, hHeld, touch);
-			} else {
-				if (!screens.empty())	screens.top()->Logic(hDown, hHeld, touch);
-			}
+			if (!stack) if (usedScreen) usedScreen->Logic(hDown, hHeld, touch);
+
+		} else {
+			if (!screens.empty()) screens.top()->Logic(hDown, hHeld, touch);
 		}
+
 	} else {
 		if (!stack) {
-			if (usedScreen != nullptr)	usedScreen->Logic(hDown, hHeld, touch);
+			if (usedScreen) usedScreen->Logic(hDown, hHeld, touch);
+
 		} else {
-			if (!screens.empty())	screens.top()->Logic(hDown, hHeld, touch);
+			if (!screens.empty()) screens.top()->Logic(hDown, hHeld, touch);
 		}
 	}
 }
 
-// Move's the tempScreen to the used one.
+/*
+	Move's the tempScreen to the used one.
+
+	bool stack: If using the stack-screens or not.
+*/
 void Gui::transferScreen(bool stack) {
 	if (!stack) {
-		if (tempScreen != nullptr)	usedScreen = std::move(tempScreen);
+		if (tempScreen) usedScreen = std::move(tempScreen);
+
 	} else {
-		if (tempScreen != nullptr)	screens.push(std::move(tempScreen));
+		if (tempScreen) screens.push(std::move(tempScreen));
 	}
 }
 
-// Set the current Screen.
-void Gui::setScreen(std::unique_ptr<Screen> screen, bool fade, bool stack) { 
+/*
+	Set the current Screen.
+
+	std::unique_ptr<Screen> screen: The screen class.
+	bool fade: If doing a fade effect or not.
+	bool stack: If using the stack-screens or not.
+*/
+void Gui::setScreen(std::unique_ptr<Screen> screen, bool fade, bool stack) {
 	tempScreen = std::move(screen);
-	// Switch screen without fade.
+
+	/* Switch screen without fade. */
 	if (!fade) {
 		Gui::transferScreen(stack);
+
 	} else {
-		// Fade, then switch.
+		/* Fade, then switch. */
 		fadeout = true;
 	}
 }
 
-// Fade's the screen in and out and transfer the screen.
-// Credits goes to RocketRobz & SavvyManager.
+/*
+	Fade's the screen in and out and transfer the screen.
+	Credits goes to RocketRobz & SavvyManager.
+
+	int fadeoutFrames: The fadeout frames.
+	int fadeinFrames: The fadein frames.
+	bool stack: If using the stack-screens or not. (Used to properly transfer screens).
+*/
 void Gui::fadeEffects(int fadeoutFrames, int fadeinFrames, bool stack) {
 	if (fadein) {
 		fadealpha -= fadeinFrames;
+
 		if (fadealpha < 0) {
 			fadealpha = 0;
 			fadecolor = 255;
@@ -317,6 +477,7 @@ void Gui::fadeEffects(int fadeoutFrames, int fadeinFrames, bool stack) {
 	if (stack) {
 		if (fadein2) {
 			fadealpha -= fadeinFrames;
+
 			if (fadealpha < 0) {
 				fadealpha = 0;
 				fadecolor = 255;
@@ -327,6 +488,7 @@ void Gui::fadeEffects(int fadeoutFrames, int fadeinFrames, bool stack) {
 
 	if (fadeout) {
 		fadealpha += fadeoutFrames;
+
 		if (fadealpha > 255) {
 			fadealpha = 255;
 			Gui::transferScreen(stack); // Transfer Temp screen to the stack / used one.
@@ -338,6 +500,7 @@ void Gui::fadeEffects(int fadeoutFrames, int fadeinFrames, bool stack) {
 	if (stack) {
 		if (fadeout2) {
 			fadealpha += fadeoutFrames;
+
 			if (fadealpha > 255) {
 				fadealpha = 255;
 				Gui::screenBack2(); // Go screen back.
@@ -348,34 +511,68 @@ void Gui::fadeEffects(int fadeoutFrames, int fadeinFrames, bool stack) {
 	}
 }
 
-// Go a screen back. (Stack only!)
+/*
+	Go a screen back. (Stack only!)
+
+	bool fade: If doing a fade or not.
+*/
 void Gui::screenBack(bool fade) {
 	if (!fade) {
-		if (screens.size() > 0)	screens.pop();
+		if (screens.size() > 0) screens.pop();
+
 	} else {
-		if (screens.size() > 0)	fadeout2 = true;
+		if (screens.size() > 0) fadeout2 = true;
 	}
 }
-void Gui::screenBack2() { if (screens.size() > 0)	screens.pop(); }
+void Gui::screenBack2() { if (screens.size() > 0) screens.pop(); };
 
-// Select, on which Screen should be drawn.
-void Gui::ScreenDraw(C3D_RenderTarget * screen) {
+/*
+	Select, on which Screen should be drawn.
+
+	C3D_RenderTarget *screen: The render target.
+*/
+void Gui::ScreenDraw(C3D_RenderTarget *screen) {
 	C2D_SceneBegin(screen);
 	currentScreen = (screen == Top || screen == TopRight) ? 1 : 0;
 }
 
-void Gui::drawGrid(float xPos, float yPos, float Width, float Height, u32 color) {
-	static constexpr int w	= 1;
-	// BG Color for the Grid. (Transparent.)
-	C2D_DrawRectSolid(xPos, yPos, 0.5, Width, Height, C2D_Color32(0, 0, 0, 0));
+/*
+	Draw a grid.
 
-	// Grid part.
-	C2D_DrawRectSolid(xPos, yPos, 0.5, Width, w, color);	// top
-	C2D_DrawRectSolid(xPos, yPos + w, 0.5, w, Height - 2 * w, color);	// left
-	C2D_DrawRectSolid(xPos + Width - w, yPos + w, 0.5, w, Height - 2 * w, color); // right
-	C2D_DrawRectSolid(xPos, yPos + Height - w, 0.5, Width, w, color);	// bottom
+	float xPos: The X-Position of the grid.
+	float yPos: The Y-Position of the grid.
+	float Width: The width of the grid.
+	float Height: The height of the grid.
+	u32 color: The color of the grid.
+	u32 bgColor: The BG Color of the grid.
+*/
+void Gui::drawGrid(float xPos, float yPos, float Width, float Height, u32 color, u32 bgColor) {
+	static constexpr int w	= 1;
+
+	/* BG Color for the Grid. (Transparent by default.) */
+	Gui::Draw_Rect(xPos, yPos, Width, Height, bgColor);
+
+	/* Grid part, Top. */
+	Gui::Draw_Rect(xPos, yPos, Width, w, color);
+	/* Left. */
+	Gui::Draw_Rect(xPos, yPos + w, w, Height - 2 * w, color);
+	/* Right. */
+	Gui::Draw_Rect(xPos + Width - w, yPos + w, w, Height - 2 * w, color);
+	/* Bottom. */
+	Gui::Draw_Rect(xPos, yPos + Height - w, Width, w, color);
 }
 
+/*
+	Draw an animated selector.
+
+	float xPos: The X-Position of the selector.
+	float yPos: The Y-Position of the selector.
+	float Width: The width of the selector.
+	float Height: The height of the selector.
+	float speed: The selector animation speed. Use .030f or so.
+	u32 SelectorColor: The selector fade color.
+	u32 bgColor: The selector BG color.
+*/
 void Gui::drawAnimatedSelector(float xPos, float yPos, float Width, float Height, float speed, u32 SelectorColor, u32 bgColor) {
 	static constexpr int w		= 2;
 	static float timer			= 0.0f;
@@ -385,14 +582,17 @@ void Gui::drawAnimatedSelector(float xPos, float yPos, float Width, float Height
 	u8 b						= (SelectorColor >> 16) & 0xFF;
 	u32 color 					= C2D_Color32(r + (255 - r) * highlight_multiplier, g + (255 - g) * highlight_multiplier, b + (255 - b) * highlight_multiplier, 255);
 
-	// BG Color for the Selector.
-	C2D_DrawRectSolid(xPos, yPos, 0.5, Width, Height, bgColor);
+	/* BG Color for the Selector. */
+	Gui::Draw_Rect(xPos, yPos, Width, Height, bgColor);
 
-	// Animated Selector part.
-	C2D_DrawRectSolid(xPos, yPos, 0.5, Width, w, color); // top
-	C2D_DrawRectSolid(xPos, yPos + w, 0.5, w, Height - 2 * w, color); // left
-	C2D_DrawRectSolid(xPos + Width - w, yPos + w, 0.5, w, Height - 2 * w, color); // right
-	C2D_DrawRectSolid(xPos, yPos + Height - w, 0.5, Width, w, color); // bottom
+	/* Selector part, Top. */
+	Gui::Draw_Rect(xPos, yPos, Width, w, color);
+	/* Left. */
+	Gui::Draw_Rect(xPos, yPos + w, w, Height - 2 * w, color);
+	/* Right. */
+	Gui::Draw_Rect(xPos + Width - w, yPos + w, w, Height - 2 * w, color);
+	/* Bottom. */
+	Gui::Draw_Rect(xPos, yPos + Height - w, Width, w, color);
 
-	timer += speed; // Speed of the animation. Example : .030f / .030
+	timer += speed;
 }
