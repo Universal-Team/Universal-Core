@@ -108,8 +108,9 @@ namespace Gui {
 		maxWidth: The maxWidth for the Text. (Optional!)
 		maxHeight: The maxHeight of the Text. (Optional!)
 		fnt: The Font which should be used. Uses SystemFont by default. (Optional!)
+		int flags: C2D text flags to use. (Optional!)
 	*/
-	void DrawStringCentered(float x, float y, float size, u32 color, std::string Text, int maxWidth = 0, int maxHeight = 0, C2D_Font fnt = nullptr);
+	void DrawStringCentered(float x, float y, float size, u32 color, std::string Text, int maxWidth = 0, int maxHeight = 0, C2D_Font fnt = nullptr, int flags = 0);
 
 	/*
 		Draws a String.
@@ -122,8 +123,9 @@ namespace Gui {
 		maxWidth: The maxWidth for the Text. (Optional!)
 		maxHeight: The maxHeight of the Text. (Optional!)
 		fnt: The Font which should be used. Uses SystemFont by default. (Optional!)
+		flags: C2D text flags to use.
 	*/
-	void DrawString(float x, float y, float size, u32 color, std::string Text, int maxWidth = 0, int maxHeight = 0, C2D_Font fnt = nullptr);
+	void DrawString(float x, float y, float size, u32 color, std::string Text, int maxWidth = 0, int maxHeight = 0, C2D_Font fnt = nullptr, int flags = 0);
 
 	/*
 		Get the width of a String.
@@ -153,17 +155,6 @@ namespace Gui {
 		fnt: The Font which should be used. Uses SystemFont by default. (Optional!)
 	*/
 	float GetStringHeight(float size, std::string Text, C2D_Font fnt = nullptr);
-
-	/*
-		Wrap a long string into a wrapped string.
-
-		const std::string &text: The Text which should be wrapped.
-		float TextSize: The Textsize.
-		int maxWidth: The max width for wrapping.
-
-		NOTE: Only call this once! This does do a lot of calls with while, for loops etc.
-	*/
-	std::string WrapText(const std::string &text, float Textsize, int maxWidth);
 
 	/*
 		Draw a Rectangle.

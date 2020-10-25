@@ -171,48 +171,10 @@ Result Gui::reinit(void) {
 	int maxWidth: (Optional) The max width of the Text.
 	int maxHeight: (Optional) The max height of the Text.
 	C2D_Font fnt: (Optional) The wanted C2D_Font. Is nullptr by default.
+	int flags: (Optional) C2D text flags to use.
 */
-void Gui::DrawStringCentered(float x, float y, float size, u32 color, std::string Text, int maxWidth, int maxHeight, C2D_Font fnt) {
-	float lineHeight, widthScale;
-
-	/* Check for the lineHeight. */
-	if (fnt) lineHeight = Gui::GetStringHeight(size, " ", fnt);
-	else lineHeight = Gui::GetStringHeight(size, " ");
-
-	int line = 0;
-
-	while(Text.find('\n') != Text.npos) {
-		if (maxWidth == 0) {
-			/* Do the widthScale. */
-			if (fnt) widthScale = Gui::GetStringWidth(size, Text.substr(0, Text.find('\n')), fnt);
-			else widthScale = Gui::GetStringWidth(size, Text.substr(0, Text.find('\n')));
-
-		} else {
-			/* Do the widthScale 2. */
-			if (fnt) widthScale = std::min((float)maxWidth, Gui::GetStringWidth(size, Text.substr(0, Text.find('\n')), fnt));
-			else widthScale = std::min((float)maxWidth, Gui::GetStringWidth(size, Text.substr(0, Text.find('\n'))));
-		}
-
-		if (fnt) Gui::DrawString((currentScreen ? 200 : 160)+x-(widthScale/2), y+(lineHeight*line), size, color, Text.substr(0, Text.find('\n')), maxWidth, maxHeight, fnt);
-		else Gui::DrawString((currentScreen ? 200 : 160)+x-(widthScale/2), y+(lineHeight*line), size, color, Text.substr(0, Text.find('\n')), maxWidth, maxHeight);
-
-		Text = Text.substr(Text.find('\n')+1);
-		line++;
-	}
-
-	if (maxWidth == 0) {
-		/* Do the next WidthScale. */
-		if (fnt) widthScale = Gui::GetStringWidth(size, Text.substr(0, Text.find('\n')), fnt);
-		else widthScale = Gui::GetStringWidth(size, Text.substr(0, Text.find('\n')));
-
-	} else {
-		/* And again. */
-		if (fnt) widthScale = std::min((float)maxWidth, Gui::GetStringWidth(size, Text.substr(0, Text.find('\n')), fnt));
-		else widthScale = std::min((float)maxWidth, Gui::GetStringWidth(size, Text.substr(0, Text.find('\n'))));
-	}
-
-	if (fnt) Gui::DrawString((currentScreen ? 200 : 160)+x-(widthScale/2), y+(lineHeight*line), size, color, Text.substr(0, Text.find('\n')), maxWidth, maxHeight, fnt);
-	else Gui::DrawString((currentScreen ? 200 : 160)+x-(widthScale/2), y+(lineHeight*line), size, color, Text.substr(0, Text.find('\n')), maxWidth, maxHeight);
+void Gui::DrawStringCentered(float x, float y, float size, u32 color, std::string Text, int maxWidth, int maxHeight, C2D_Font fnt, int flags) {
+	Gui::DrawString(x +(currentScreen ? 200 : 160), y, size, color, Text, maxWidth, maxHeight, fnt, flags | C2D_AlignCenter);
 }
 
 /*
@@ -226,8 +188,9 @@ void Gui::DrawStringCentered(float x, float y, float size, u32 color, std::strin
 	int maxWidth: (Optional) The max width of the Text.
 	int maxHeight: (Optional) The max height of the Text.
 	C2D_Font fnt: (Optional) The wanted C2D_Font. Is nullptr by default.
+	int flags: (Optional) C2D text flags to use.
 */
-void Gui::DrawString(float x, float y, float size, u32 color, std::string Text, int maxWidth, int maxHeight, C2D_Font fnt) {
+void Gui::DrawString(float x, float y, float size, u32 color, std::string Text, int maxWidth, int maxHeight, C2D_Font fnt, int flags) {
 	C2D_Text c2d_text;
 
 	if (fnt) C2D_TextFontParse(&c2d_text, fnt, TextBuf, Text.c_str());
@@ -246,11 +209,12 @@ void Gui::DrawString(float x, float y, float size, u32 color, std::string Text, 
 	}
 
 	if (maxWidth == 0) {
-		C2D_DrawText(&c2d_text, C2D_WithColor, x, y, 0.5f, size, heightScale, color);
-
+		C2D_DrawText(&c2d_text, C2D_WithColor | flags, x, y, 0.5f, size, heightScale, color);
+	} else if (flags & C2D_WordWrap) {
+		C2D_DrawText(&c2d_text, C2D_WithColor | flags, x, y, 0.5f, size, heightScale, color, (float)maxWidth);
 	} else {
-		if (fnt) C2D_DrawText(&c2d_text, C2D_WithColor, x, y, 0.5f, std::min(size, size*(maxWidth/Gui::GetStringWidth(size, Text, fnt))), heightScale, color);
-		else C2D_DrawText(&c2d_text, C2D_WithColor, x, y, 0.5f, std::min(size, size*(maxWidth/Gui::GetStringWidth(size, Text))), heightScale, color);
+		if (fnt) C2D_DrawText(&c2d_text, C2D_WithColor | flags, x, y, 0.5f, std::min(size, size*(maxWidth/Gui::GetStringWidth(size, Text, fnt))), heightScale, color);
+		else C2D_DrawText(&c2d_text, C2D_WithColor | flags, x, y, 0.5f, std::min(size, size*(maxWidth/Gui::GetStringWidth(size, Text))), heightScale, color);
 	}
 }
 
@@ -303,67 +267,6 @@ float Gui::GetStringHeight(float size, std::string Text, C2D_Font fnt) {
 	else GetStringSize(size, NULL, &height, Text.c_str());
 
 	return height;
-}
-
-/*
-	Wrap long Text into a string. This code is based of:
-	https://github.com/DS-Homebrew/TWiLightMenu/blob/master/settings/arm9/source/settingsgui.cpp#L151.
-
-	const std::string &text: The Text which should be wrapped.
-	float TextSize: The Textsize.
-	int maxWidth: The max width for wrapping.
-
-	NOTE: Only call this once! This does do a lot of calls with while, for loops etc.
-*/
-std::string Gui::WrapText(const std::string &text, float Textsize, int maxWidth) {
-	std::string result, temp, _resultStr = text;
-	std::vector<std::string> words;
-	std::size_t pos;
-
-	/* Process comment to stay within the maxWidth. */
-	while((pos = _resultStr.find(' ')) != std::string::npos) {
-		words.push_back(_resultStr.substr(0, pos));
-		_resultStr = _resultStr.substr(pos + 1);
-	}
-
-	if (_resultStr.size()) words.push_back(_resultStr);
-
-	for(auto word : words) {
-		/* Split word if the word is too long for a line. */
-		const int width = Gui::GetStringWidth(Textsize, word);
-
-		if (width > maxWidth) {
-			if (temp.length()) {
-				result += temp + "\n";
-				temp = "";
-			}
-
-			for(int i = 0; i < width / maxWidth; i++) {
-				word.insert((float)((i + 1) * word.length()) / ((width / maxWidth) + 1), "\n");
-			}
-
-			result += word + "\n";
-			continue;
-		}
-
-		const int width2 = Gui::GetStringWidth(Textsize, temp + " " + word);
-
-		if (width2 > 240) {
-			result += temp + "\n";
-			temp = word;
-
-		} else {
-			temp += " " + word;
-		}
-	}
-
-	if (temp.size()) result += temp;
-
-	/* Ensure there are no newlines at the beginning or end. */
-	while(result[0] == '\n') result = result.substr(1);
-	while(result[result.length() - 1] == '\n') result = result.substr(0, result.length() - 2);
-
-	return result;
 }
 
 /*
