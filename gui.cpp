@@ -308,7 +308,12 @@ void Gui::DrawScreen(bool stack) {
 void Gui::ScreenLogic(u32 hDown, u32 hHeld, touchPosition touch, bool waitFade, bool stack) {
 	if (waitFade) {
 		if (!fadein && !fadeout && !fadein2 && !fadeout2) {
-			if (!stack) if (usedScreen) usedScreen->Logic(hDown, hHeld, touch);
+			if (!stack) {
+				if (usedScreen)	usedScreen->Logic(hDown, hHeld, touch);
+
+			} else {
+				if (!screens.empty()) screens.top()->Logic(hDown, hHeld, touch);
+			}
 
 		} else {
 			if (!screens.empty()) screens.top()->Logic(hDown, hHeld, touch);
