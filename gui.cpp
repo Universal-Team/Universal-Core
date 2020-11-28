@@ -314,14 +314,11 @@ void Gui::ScreenLogic(u32 hDown, u32 hHeld, touchPosition touch, bool waitFade, 
 			} else {
 				if (!screens.empty()) screens.top()->Logic(hDown, hHeld, touch);
 			}
-
-		} else {
-			if (!screens.empty()) screens.top()->Logic(hDown, hHeld, touch);
 		}
 
 	} else {
 		if (!stack) {
-			if (usedScreen) usedScreen->Logic(hDown, hHeld, touch);
+			if (usedScreen)	usedScreen->Logic(hDown, hHeld, touch);
 
 		} else {
 			if (!screens.empty()) screens.top()->Logic(hDown, hHeld, touch);
