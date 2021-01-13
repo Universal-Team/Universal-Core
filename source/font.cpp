@@ -1,0 +1,346 @@
+#include "font.hpp"
+
+#include "tonccpy.h"
+
+#ifdef TEXT_BUFFERED
+u8 Font::textBuf[2][256 * 192];
+#endif
+
+Font::Font(const std::vector<std::string> &paths) {
+	FILE *file = nullptr;
+	for(const auto &path : paths) {
+		file = fopen(path.c_str(), "rb");
+		if(file)
+			break;
+	}
+
+	if(file) {
+		// Get file size
+		fseek(file, 0, SEEK_END);
+		u32 fileSize = ftell(file);
+
+		// Skip font info
+		fseek(file, 0x14, SEEK_SET);
+		fseek(file, fgetc(file) - 1, SEEK_CUR);
+
+		// Load glyph info
+		u32 chunkSize;
+		fread(&chunkSize, 4, 1, file);
+		tileWidth  = fgetc(file);
+		tileHeight = fgetc(file);
+		fread(&tileSize, 2, 1, file);
+
+		// Load character glyphs
+		int tileAmount = ((chunkSize - 0x10) / tileSize);
+		fontTiles      = std::vector<u8>(tileSize * tileAmount);
+		fseek(file, 4, SEEK_CUR);
+		fread(fontTiles.data(), tileSize, tileAmount, file);
+
+		// Fix top row
+		for(int i = 0; i < tileAmount; i++) {
+			fontTiles[i * tileSize]     = 0;
+			fontTiles[i * tileSize + 1] = 0;
+			fontTiles[i * tileSize + 2] = 0;
+		}
+
+		// Load character widths
+		fseek(file, 0x24, SEEK_SET);
+		u32 locHDWC;
+		fread(&locHDWC, 4, 1, file);
+		fseek(file, locHDWC - 4, SEEK_SET);
+		fread(&chunkSize, 4, 1, file);
+		fseek(file, 8, SEEK_CUR);
+		fontWidths = std::vector<u8>(3 * tileAmount);
+		fread(fontWidths.data(), 3, tileAmount, file);
+
+		// Load character maps
+		fontMap = std::vector<u16>(tileAmount);
+		fseek(file, 0x28, SEEK_SET);
+		u32 locPAMC, mapType;
+		fread(&locPAMC, 4, 1, file);
+
+		while(locPAMC < fileSize) {
+			u16 firstChar, lastChar;
+			fseek(file, locPAMC, SEEK_SET);
+			fread(&firstChar, 2, 1, file);
+			fread(&lastChar, 2, 1, file);
+			fread(&mapType, 4, 1, file);
+			fread(&locPAMC, 4, 1, file);
+
+			switch(mapType) {
+				case 0: {
+					u16 firstTile;
+					fread(&firstTile, 2, 1, file);
+					for(unsigned i = firstChar; i <= lastChar; i++) {
+						fontMap[firstTile + (i - firstChar)] = i;
+					}
+					break;
+				}
+				case 1: {
+					for(int i = firstChar; i <= lastChar; i++) {
+						u16 tile;
+						fread(&tile, 2, 1, file);
+						fontMap[tile] = i;
+					}
+					break;
+				}
+				case 2: {
+					u16 groupAmount;
+					fread(&groupAmount, 2, 1, file);
+					for(int i = 0; i < groupAmount; i++) {
+						u16 charNo, tileNo;
+						fread(&charNo, 2, 1, file);
+						fread(&tileNo, 2, 1, file);
+						fontMap[tileNo] = charNo;
+					}
+					break;
+				}
+			}
+		}
+		fclose(file);
+		questionMark = charIndex('?');
+	}
+}
+
+u16 Font::charIndex(char16_t c) {
+	// Try a binary search
+	int left  = 0;
+	int right = fontMap.size();
+
+	while(left <= right) {
+		int mid = left + ((right - left) / 2);
+		if(fontMap[mid] == c) {
+			return mid;
+		}
+
+		if(fontMap[mid] < c) {
+			left = mid + 1;
+		} else {
+			right = mid - 1;
+		}
+	}
+
+	// If not found, return a question mark
+	return questionMark;
+}
+
+std::u16string Font::utf8to16(std::string_view text) {
+	std::u16string out;
+	for(uint i = 0; i < text.size();) {
+		char16_t c;
+		if(!(text[i] & 0x80)) {
+			c = text[i++];
+		} else if((text[i] & 0xE0) == 0xC0) {
+			c = (text[i++] & 0x1F) << 6;
+			c |= text[i++] & 0x3F;
+		} else if((text[i] & 0xF0) == 0xE0) {
+			c = (text[i++] & 0x0F) << 12;
+			c |= (text[i++] & 0x3F) << 6;
+			c |= text[i++] & 0x3F;
+		} else {
+			i++; // out of range or something (This only does up to 0xFFFF since it goes to a U16 anyways)
+		}
+		out += c;
+	}
+	return out;
+}
+
+int Font::calcWidth(std::u16string_view text) {
+	uint x = 0;
+
+	for(auto c : text) {
+		u16 index = charIndex(c);
+		x += fontWidths[(index * 3) + 2];
+	}
+
+	return x;
+}
+
+ITCM_CODE void Font::print(std::u16string_view text, int x, int y, bool top, int layer, Alignment align, int maxWidth,
+						   int color, float scaleX, float scaleY, Sprite *sprite) {
+	// Adjust x for alignment
+	switch(align) {
+		case Alignment::left: {
+			break;
+		}
+		case Alignment::center: {
+			size_t newline = text.find('\n');
+			while(newline != text.npos) {
+				print(text.substr(0, newline), x, y, top, layer, align, maxWidth, color, scaleX, scaleY, sprite);
+				text    = text.substr(newline + 1);
+				newline = text.find('\n');
+				y += tileHeight;
+			}
+
+			x += ((sprite ? sprite->width() : 256) - (calcWidth(text) * scaleX)) / 2;
+			break;
+		}
+		case Alignment::right: {
+			size_t newline = text.find('\n');
+			while(newline != text.npos) {
+				print(text.substr(0, newline), x - (calcWidth(text.substr(0, newline)) * scaleX), y, top, layer,
+					  Alignment::left, maxWidth, color, scaleX, scaleY, sprite);
+				text    = text.substr(newline + 1);
+				newline = text.find('\n');
+				y += tileHeight;
+			}
+			x -= calcWidth(text) * scaleX;
+			break;
+		}
+	}
+	const int xStart = x;
+
+	bool rtl = false;
+	for(const auto c : text) {
+		if(c >= 0x0590 && c <= 0x05FF) {
+			rtl = true;
+			break;
+		}
+	}
+	auto ltrBegin = text.end(), ltrEnd = text.end();
+
+	// Loop through string and print it
+	for(auto it = (rtl ? text.end() - 1 : text.begin()); true; it += (rtl ? -1 : 1)) {
+		// If we hit the end of the string in an LTR section of an RTL
+		// string, it may not be done, if so jump back to printing RTL
+		if(it == (rtl ? text.begin() - 1 : text.end())) {
+			if(ltrBegin == text.end()) {
+				break;
+			} else {
+				it       = ltrBegin;
+				ltrBegin = text.end();
+				rtl      = true;
+			}
+		}
+
+		// If at the end of an LRT section within RTL, jump back to the RTL
+		if(it == ltrEnd && ltrBegin != text.end()) {
+			if(ltrBegin == text.begin())
+				break;
+
+			it       = ltrBegin;
+			ltrBegin = text.end();
+			rtl      = true;
+			// If in RTL and hit a non-RTL character that's not punctuation, switch to LTR
+		} else if(rtl &&
+				  ((*it < 0x0590 || *it > 0x05FF) &&
+				   ((*it >= '0' && *it <= '9') || (*it >= 'A' && *it <= 'Z') || (*it >= 'a' && *it <= 'z') ||
+					*it >= 127))) {
+			// Save where we are as the end of the LTR section
+			ltrEnd = it + 1;
+			// Go back until an RTL character or the start of the string
+			while((*it < 0x0590 || *it > 0x05FF) && it != text.begin())
+				it--;
+			// Save where we are to return to after printing the LTR section
+			ltrBegin = it;
+			// If not at the start, then we're on the first RTL right now, so add one
+			if(it != text.begin())
+				it++;
+			// Skip all punctuation at the end if not at beginning
+			while(it != text.begin() &&
+				  (*it < '0' || (*it > '9' && *it < 'A') || (*it > 'Z' && *it < 'a') || (*it > 'z' && *it < 127))) {
+				it++;
+				ltrBegin++;
+			}
+			rtl = false;
+		}
+
+		if(*it == '\n') {
+			x = xStart;
+			y += tileHeight;
+			continue;
+		}
+
+		u16 index = charIndex(*it);
+
+		// Brackets are flipped in RTL
+		if(rtl) {
+			if(*it == '(')
+				index = charIndex(')');
+			else if(*it == ')')
+				index = charIndex('(');
+			else if(*it == '[')
+				index = charIndex(']');
+			else if(*it == ']')
+				index = charIndex('[');
+		}
+
+		if(sprite) {
+			// Don't draw off sprite chars
+			if(x >= 0 && x < sprite->width() && y >= 0 && y + tileHeight < sprite->height()) {
+				u16 *dst = sprite->gfx() + x + fontWidths[(index * 3)];
+				// Use faster integer math if scale is 1
+				if(scaleX == 1.0f && scaleY == 1.0f) {
+					for(int i = 0; i < tileHeight; i++) {
+						for(int j = 0; j < tileWidth; j++) {
+							u8 px = fontTiles[(index * tileSize) + (i * tileWidth + j) / 4] >>
+									((3 - ((i * tileWidth + j) % 4)) * 2) &
+								3;
+							if(px)
+								dst[(y + i) * sprite->width() + j] = px + (color * 4);
+						}
+					}
+				} else {
+					for(float i = 0.0f; i < tileHeight; i += 1 / scaleY) {
+						for(float j = 0.0f; j < tileWidth; j += 1 / scaleY) {
+							u8 px = fontTiles[(index * tileSize) + (i * tileWidth + j) / 4] >>
+									((3 - (int(i * tileWidth + j) % 4)) * 2) &
+								3;
+							if(px)
+								dst[int((y + i) * sprite->width() + j)] = px + (color * 4);
+						}
+					}
+				}
+			}
+		} else {
+			// Don't draw off screen chars
+			if(x >= 0 && x + fontWidths[(index * 3) + 2] < 256 && y >= 0 && y + tileHeight < 192) {
+#ifdef TEXT_BUFFERED
+				u8 *dst = textBuf[top] + x + fontWidths[(index * 3)];
+#else
+				u8 *dst = (u8 *)bgGetGfxPtr(top ? layer : layer + 4) + x + fontWidths[(index * 3)];
+#endif
+				// Use faster integer math if scale is 1
+				if(scaleX == 1.0f && scaleY == 1.0f) {
+					for(int i = 0; i < tileHeight; i++) {
+						for(int j = 0; j < tileWidth; j++) {
+							u8 px = fontTiles[(index * tileSize) + (i * tileWidth + j) / 4] >>
+									((3 - ((i * tileWidth + j) % 4)) * 2) &
+								3;
+							if(px)
+#ifdef TEXT_BUFFERED
+								dst[(y + i) * 256 + j] = px + (color * 4);
+#else
+								toncset(dst + (y + i) * 256 + j, px + (color * 4), 1);
+#endif
+						}
+					}
+				} else {
+					for(float i = 0.0f; i < tileHeight; i += 1 / scaleY) {
+						for(float j = 0.0f; j < tileWidth; j += 1 / scaleX) {
+							u8 px = fontTiles[(index * tileSize) + (i * tileWidth + j) / 4] >>
+									((3 - (int(i * tileWidth + j) % 4)) * 2) &
+								3;
+							if(px)
+#ifdef TEXT_BUFFERED
+								dst[(y + i) * 256 + j] = px + (color * 4);
+#else
+								toncset(dst + int((y + i) * 256 + j), px + (color * 4), 1);
+#endif
+						}
+					}
+				}
+			}
+		}
+
+		x += fontWidths[(index * 3) + 2];
+	}
+}
+
+#ifdef TEXT_BUFFERED
+void Font::clear(bool top) { dmaFillWords(0, FontGraphic::textBuf[top], 256 * 192); }
+
+void Font::update(bool top) {
+	tonccpy(bgGetGfxPtr(top ? TEXT_TOP_LAYER : TEXT_BOTTOM_LAYER + 4), FontGraphic::textBuf[top], 256 * 192);
+}
+#endif
