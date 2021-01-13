@@ -1,5 +1,5 @@
-#ifndef SPRITE_HPP
-#define SPRITE_HPP
+#ifndef _UNIVERSAL_CORE_SPRITE_HPP
+#define _UNIVERSAL_CORE_SPRITE_HPP
 
 #include "image.hpp"
 
@@ -14,7 +14,7 @@ private:
 	int _x, _y, _priority, _id, _rotationIndex, _paletteAlpha, _width, _height, _rotation;
 	float _scaleX, _scaleY;
 	bool _visibility;
-	u16* _gfx;
+	u16 *_gfx;
 
 	static bool _assigned[2][256];
 
