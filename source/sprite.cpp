@@ -28,22 +28,23 @@
 
 #include "tonccpy.h"
 
-bool Sprite::_assigned[2][127];
+bool Sprite::_assigned[2][128] = {{false}, {false}};
 
 Sprite::Sprite(bool top, SpriteSize size, SpriteColorFormat format, int x, int y, int priority, int id,
 			   int paletteAlpha, int rotationIndex, bool doubleSize, bool visible, bool vFlip, bool hFlip, bool mosaic)
 	: _top(top), _oam(top ? &oamMain : &oamSub), _size(size), _format(format), _x(x), _y(y), _priority(priority),
-	  _id(id), _rotationIndex(rotationIndex), _paletteAlpha(paletteAlpha) {
+	  _id(id), _rotationIndex(rotationIndex), _paletteAlpha(paletteAlpha), _visibility(visible) {
 	// If the ID is -1, set it to the first free one
 	if(_id == -1) {
-		for(uint i = 0; i < sizeof(_assigned[top]) / sizeof(_assigned[top][0]); i++) {
-			if(!_assigned[top][i]) {
-				_assigned[top][i] = true;
-				_id               = i;
+		for(uint i = 0; i < sizeof(_assigned[_top]) / sizeof(_assigned[_top][0]); i++) {
+			if(!_assigned[_top][i]) {
+				_id = i;
 				break;
 			}
 		}
 	}
+
+	_assigned[top][_id] = true;
 
 	// Get the sprite width and height from the SpriteSize
 	if(((_size >> 12) & 3) == OBJSHAPE_SQUARE) {
@@ -93,7 +94,7 @@ Sprite::Sprite(bool top, SpriteSize size, SpriteColorFormat format, int x, int y
 	_gfx = oamAllocateGfx(_oam, _size, _format);
 
 	// Set sprite
-	oamSet(_oam, _id, _x, _y, _priority, _paletteAlpha, _size, _format, _gfx, _rotationIndex, doubleSize, !visible,
+	oamSet(_oam, _id, _x, _y, _priority, _paletteAlpha, _size, _format, _gfx, _rotationIndex, doubleSize, !_visibility,
 		   vFlip, hFlip, mosaic);
 }
 
@@ -165,7 +166,7 @@ void Sprite::drawImageSegment(int x, int y, int imageX, int imageY, int w, int h
 	if(scaleX == 1.0f && scaleY == 1.0f) {
 		for(int i = 0; i < h; i++) {
 			for(int j = 0; j < w; j++) {
-				u16 px = image.palette()[image.bitmap()[i * image.width() + j] - image.palOfs()];
+				u16 px = image.palette()[image.bitmap()[(imageY + i) * image.width() + imageX + j] - image.palOfs()];
 				if(px & 0x8000)
 					toncset16(_gfx + ((y + i) * _height + x + j), px, 1);
 			}
@@ -173,7 +174,7 @@ void Sprite::drawImageSegment(int x, int y, int imageX, int imageY, int w, int h
 	} else {
 		for(float i = 0; i < h; i += 1 / scaleX) {
 			for(float j = 0; j < image.width(); j += 1 / scaleY) {
-				u16 px = image.palette()[image.bitmap()[i * image.width() + j] - image.palOfs()];
+				u16 px = image.palette()[image.bitmap()[(imageY + i) * image.width() + imageX + j] - image.palOfs()];
 				if(px & 0x8000)
 					toncset16(_gfx + int((y + i) * _height + x + j), px, 1);
 			}
