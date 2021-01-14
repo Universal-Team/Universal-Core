@@ -70,16 +70,16 @@ void Graphics::clear(bool top, int layer) { toncset(bgGetGfxPtr(top ? layer : la
 void Graphics::drawOutline(int x, int y, int w, int h, u8 color, bool top, int layer) {
 	u8 *dst = (u8 *)bgGetGfxPtr(top ? layer : layer + 4);
 	h += y;
-	if(y >= 0 && y < 192)
-		toncset(dst + y * 256 + std::max(x, 0), color, std::min(w, 256 - x - w));
+	if(y >= 0 && y <= 192)
+		toncset(dst + y * 256 + std::max(x, 0), color, std::min(w, 256 - x));
 	for(y++; y < (h - 1); y++) {
-		if(y >= 0 && y < 192 && x > 0)
+		if(y >= 0 && y <= 192 && x >= 0)
 			toncset(dst + y * 256 + x, color, 1);
-		if(y >= 0 && y < 192 && x + w < 256)
+		if(y >= 0 && y <= 192 && x + w <= 256)
 			toncset(dst + y * 256 + x + w - 1, color, 1);
 	}
-	if(y >= 0 && y < 192)
-		toncset(dst + y * 256 + std::max(x, 0), color, std::min(w, 256 - x - w));
+	if(y >= 0 && y <= 192)
+		toncset(dst + y * 256 + std::max(x, 0), color, std::min(w, 256 - x));
 }
 
 void Graphics::drawRectangle(int x, int y, int w, int h, u8 color, bool top, bool layer) {

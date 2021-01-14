@@ -171,16 +171,16 @@ void Sprite::fillColor(u16 color) { toncset16(_gfx, color, (_size & 0xFF) << 5);
 
 void Sprite::drawOutline(int x, int y, int w, int h, u16 color) {
 	h += y;
-	if(y >= 0 && y < _height)
-		toncset16(_gfx + y * _width + std::max(x, 0), color, std::min(w, _width - x - w));
+	if(y >= 0 && y <= _height)
+		toncset16(_gfx + y * _width + std::max(x, 0), color, std::min(w, _width - x));
 	for(y++; y < (h - 1); y++) {
-		if(y >= 0 && y < _height && x > 0)
+		if(y >= 0 && y <= _height && x >= 0)
 			_gfx[y * _width + x] = color;
-		if(y >= 0 && y < _height && x + w < _width)
+		if(y >= 0 && y <= _height && x + w <= _width)
 			_gfx[y * _width + x + w - 1] = color;
 	}
-	if(y >= 0 && y < _height)
-		toncset16(_gfx + y * _width + std::max(x, 0), color, std::min(w, _width - x - w));
+	if(y >= 0 && y <= _height)
+		toncset16(_gfx + y * _width + std::max(x, 0), color, std::min(w, _width - x));
 }
 
 void Sprite::drawRectangle(int x, int y, int w, int h, u16 color1, u16 color2) {
