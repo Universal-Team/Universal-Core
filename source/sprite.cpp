@@ -101,8 +101,33 @@ Sprite::Sprite(bool top, SpriteSize size, SpriteColorFormat format, int x, int y
 Sprite::Sprite(const Sprite &sprite)
 	: _top(sprite._top), _oam(sprite._oam), _size(sprite._size), _format(sprite._format), _x(sprite._x), _y(sprite._y),
 	  _priority(sprite._priority), _id(sprite._id), _rotationIndex(sprite._rotationIndex),
-	  _paletteAlpha(sprite._paletteAlpha), _visibility(sprite._visibility) {
+	  _paletteAlpha(sprite._paletteAlpha), _width(sprite._width), _height(sprite._height), _rotation(sprite._rotation),
+	  _scaleX(sprite._scaleX), _scaleY(sprite._scaleY), _visibility(sprite._visibility), _gfx(sprite._gfx) {
 	_assigned[_top][_id]++;
+}
+
+Sprite &Sprite::operator=(const Sprite &sprite) {
+	_top           = sprite._top;
+	_oam           = sprite._oam;
+	_size          = sprite._size;
+	_format        = sprite._format;
+	_x             = sprite._x;
+	_y             = sprite._y;
+	_priority      = sprite._priority;
+	_id            = sprite._id;
+	_rotationIndex = sprite._rotationIndex;
+	_paletteAlpha  = sprite._paletteAlpha;
+	_width         = sprite._width;
+	_height        = sprite._height;
+	_rotation      = sprite._rotation;
+	_scaleX        = sprite._scaleX;
+	_scaleY        = sprite._scaleY;
+	_visibility    = sprite._visibility;
+	_gfx           = sprite._gfx;
+
+	_assigned[_top][_id]++;
+
+	return *this;
 }
 
 Sprite::~Sprite(void) {

@@ -44,8 +44,9 @@ public:
 	Sprite(bool top, SpriteSize size, SpriteColorFormat format, int x = 0, int y = 0, int priority = 0, int id = -1, int paletteAlpha = 15, int rotationIndex = -1, bool doubleSize = false, bool visible = true, bool vFlip = false, bool hFlip = false, bool mosaic = false);
 
 	Sprite(const Sprite &sprite);
-
 	~Sprite(void);
+
+	Sprite &operator=(const Sprite &sprite);
 
 	u16* gfx(void) const { return _gfx; }
 	SpriteSize size(void) const { return _size; }
