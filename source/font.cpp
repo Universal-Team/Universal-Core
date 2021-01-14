@@ -344,12 +344,12 @@ ITCM_CODE void Font::print(std::u16string_view text, int x, int y, bool top, int
 				} else {
 					for(float i = 0.0f; i < tileHeight; i += 1 / scaleY) {
 						for(float j = 0.0f; j < tileWidth; j += 1 / scaleX) {
-							u8 px = fontTiles[(index * tileSize) + (i * tileWidth + j) / 4] >>
+							u8 px = fontTiles[(index * tileSize) + int(i * tileWidth + j) / 4] >>
 									((3 - (int(i * tileWidth + j) % 4)) * 2) &
 								3;
 							if(px)
 #ifdef TEXT_BUFFERED
-								dst[(y + i) * 256 + j] = px + (color * 4);
+								dst[int((y + i) * 256 + j)] = px + (color * 4);
 #else
 								toncset(dst + int((y + i) * 256 + j), px + (color * 4), 1);
 #endif
@@ -364,9 +364,9 @@ ITCM_CODE void Font::print(std::u16string_view text, int x, int y, bool top, int
 }
 
 #ifdef TEXT_BUFFERED
-void Font::clear(bool top) { dmaFillWords(0, FontGraphic::textBuf[top], 256 * 192); }
+void Font::clear(bool top) { dmaFillWords(0, Font::textBuf[top], 256 * 192); }
 
 void Font::update(bool top) {
-	tonccpy(bgGetGfxPtr(top ? TEXT_TOP_LAYER : TEXT_BOTTOM_LAYER + 4), FontGraphic::textBuf[top], 256 * 192);
+	tonccpy(bgGetGfxPtr(top ? TEXT_TOP_LAYER : TEXT_BOTTOM_LAYER + 4), Font::textBuf[top], 256 * 192);
 }
 #endif
