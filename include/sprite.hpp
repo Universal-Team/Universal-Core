@@ -121,6 +121,16 @@ public:
 	void fillColor(u16 color);
 
 	/**
+	* @brief Draws a rectangle outline to the sprite
+	* @param x The X position
+	* @param y The Y position
+	* @param w The Width
+	* @param h The Height
+	* @param color The color to use
+	*/
+	void drawOutline(int x, int y, int w, int h, u16 color);
+
+	/**
 	 * @brief Draws a solid color rectangle to the sprite
 	 * @param x The X position to draw at
 	 * @param y The Y position to draw at

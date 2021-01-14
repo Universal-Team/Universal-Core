@@ -71,15 +71,15 @@ void Graphics::drawOutline(int x, int y, int w, int h, u8 color, bool top, int l
 	u8 *dst = (u8 *)bgGetGfxPtr(top ? layer : layer + 4);
 	h += y;
 	if(y >= 0 && y < 192)
-		toncset(dst + ((y * 256) + (x < 0 ? 0 : x)), color, (x + w > 256 ? w + (256 - x - w) : w));
+		toncset(dst + y * 256 + std::max(x, 0), color, std::min(w, 256 - x - w));
 	for(y++; y < (h - 1); y++) {
 		if(y >= 0 && y < 192 && x > 0)
-			toncset(dst + ((y)*256 + x), color, 1);
+			toncset(dst + y * 256 + x, color, 1);
 		if(y >= 0 && y < 192 && x + w < 256)
-			toncset(dst + ((y)*256 + x + w - 1), color, 1);
+			toncset(dst + y * 256 + x + w - 1, color, 1);
 	}
 	if(y >= 0 && y < 192)
-		toncset(dst + ((y * 256) + (x < 0 ? 0 : x)), color, (x + w > 256 ? w + (256 - x - w) : w));
+		toncset(dst + y * 256 + std::max(x, 0), color, std::min(w, 256 - x - w));
 }
 
 void Graphics::drawRectangle(int x, int y, int w, int h, u8 color, bool top, bool layer) {

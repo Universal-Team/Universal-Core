@@ -169,9 +169,23 @@ void Sprite::clear(void) { toncset16(_gfx, 0, (_size & 0xFF) << 5); }
 
 void Sprite::fillColor(u16 color) { toncset16(_gfx, color, (_size & 0xFF) << 5); }
 
+void Sprite::drawOutline(int x, int y, int w, int h, u16 color) {
+	h += y;
+	if(y >= 0 && y < _height)
+		toncset16(_gfx + y * _width + std::max(x, 0), color, std::min(w, _width - x - w));
+	for(y++; y < (h - 1); y++) {
+		if(y >= 0 && y < _height && x > 0)
+			_gfx[y * _width + x] = color;
+		if(y >= 0 && y < _height && x + w < _width)
+			_gfx[y * _width + x + w - 1] = color;
+	}
+	if(y >= 0 && y < _height)
+		toncset16(_gfx + y * _width + std::max(x, 0), color, std::min(w, _width - x - w));
+}
+
 void Sprite::drawRectangle(int x, int y, int w, int h, u16 color1, u16 color2) {
 	for(int i = 0; i < h; i++) {
-		toncset(_gfx + ((y + i) * _width + x), ((i % 2) ? color1 : color2), w);
+		toncset16(_gfx + ((y + i) * _width + x), ((i % 2) ? color1 : color2), w);
 	}
 }
 
@@ -182,7 +196,7 @@ void Sprite::drawImage(int x, int y, const Image &image, float scaleX, float sca
 			for(int j = 0; j < image.width(); j++) {
 				u16 px = image.palette()[image.bitmap()[i * image.width() + j] - image.palOfs()];
 				if(px & 0x8000)
-					toncset16(_gfx + (y + i) * _height + x + j, px, 1);
+					_gfx[(y + i) * _height + x + j] = px;
 			}
 		}
 	} else {
@@ -191,7 +205,7 @@ void Sprite::drawImage(int x, int y, const Image &image, float scaleX, float sca
 				u16 px =
 					image.palette()[image.bitmap()[int(i / scaleY) * image.width() + int(j / scaleX)] - image.palOfs()];
 				if(px & 0x8000)
-					toncset16(_gfx + (y + i) * _height + j + x, px, 1);
+					_gfx[(y + i) * _height + j + x] = px;
 			}
 		}
 	}
@@ -205,7 +219,7 @@ void Sprite::drawImageSegment(int x, int y, int imageX, int imageY, int w, int h
 			for(int j = 0; j < w; j++) {
 				u16 px = image.palette()[image.bitmap()[(imageY + i) * image.width() + imageX + j] - image.palOfs()];
 				if(px & 0x8000)
-					toncset16(_gfx + ((y + i) * _height + x + j), px, 1);
+					_gfx[(y + i) * _height + x + j] = px;
 			}
 		}
 	} else {
@@ -215,7 +229,7 @@ void Sprite::drawImageSegment(int x, int y, int imageX, int imageY, int w, int h
 														int(j / scaleX)] -
 										 image.palOfs()];
 				if(px & 0x8000)
-					toncset16(_gfx + (y + i) * _height + x + j, px, 1);
+					_gfx[(y + i) * _height + x + j] = px;
 			}
 		}
 	}
