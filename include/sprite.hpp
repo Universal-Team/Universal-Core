@@ -16,7 +16,7 @@ private:
 	bool _visibility;
 	u16 *_gfx;
 
-	static bool _assigned[2][128];
+	static u8 _assigned[2][128];
 
 public:
 	/**
@@ -42,6 +42,8 @@ public:
 	 * @param (Optional) mosaic Whether to mosaic the sprite // TODO: What is this?
 	 */
 	Sprite(bool top, SpriteSize size, SpriteColorFormat format, int x = 0, int y = 0, int priority = 0, int id = -1, int paletteAlpha = 15, int rotationIndex = -1, bool doubleSize = false, bool visible = true, bool vFlip = false, bool hFlip = false, bool mosaic = false);
+
+	Sprite(const Sprite &sprite);
 
 	~Sprite(void);
 

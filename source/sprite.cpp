@@ -28,7 +28,7 @@
 
 #include "tonccpy.h"
 
-bool Sprite::_assigned[2][128] = {{false}, {false}};
+u8 Sprite::_assigned[2][128] = {{false}, {false}};
 
 Sprite::Sprite(bool top, SpriteSize size, SpriteColorFormat format, int x, int y, int priority, int id,
 			   int paletteAlpha, int rotationIndex, bool doubleSize, bool visible, bool vFlip, bool hFlip, bool mosaic)
@@ -44,7 +44,7 @@ Sprite::Sprite(bool top, SpriteSize size, SpriteColorFormat format, int x, int y
 		}
 	}
 
-	_assigned[top][_id] = true;
+	_assigned[top][_id]++;
 
 	// Get the sprite width and height from the SpriteSize
 	if(((_size >> 12) & 3) == OBJSHAPE_SQUARE) {
@@ -98,9 +98,18 @@ Sprite::Sprite(bool top, SpriteSize size, SpriteColorFormat format, int x, int y
 		   vFlip, hFlip, mosaic);
 }
 
+Sprite::Sprite(const Sprite &sprite) : _top(sprite._top), _oam(sprite._oam), _size(sprite._size), _format(sprite._format), _x(sprite._x), _y(sprite._y), _priority(sprite._priority),
+	  _id(sprite._id), _rotationIndex(sprite._rotationIndex), _paletteAlpha(sprite._paletteAlpha), _visibility(sprite._visibility) {
+	_assigned[_top][_id]++;
+}
+
 Sprite::~Sprite(void) {
-	oamFreeGfx(_oam, _gfx);
-	_assigned[_top][_id] = false;
+	_assigned[_top][_id]--;
+	if(!_assigned[_top][_id]) {
+		oamFreeGfx(_oam, _gfx);
+		oamClearSprite(_oam, _id);
+		oamUpdate(_oam);
+	}
 }
 
 void Sprite::rotation(int rotation) {
