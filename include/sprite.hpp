@@ -16,7 +16,7 @@ private:
 	bool _visibility;
 	u16 *_gfx;
 
-	static bool _assigned[2][256];
+	static bool _assigned[2][127];
 
 public:
 	/**
