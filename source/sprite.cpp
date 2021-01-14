@@ -98,8 +98,10 @@ Sprite::Sprite(bool top, SpriteSize size, SpriteColorFormat format, int x, int y
 		   vFlip, hFlip, mosaic);
 }
 
-Sprite::Sprite(const Sprite &sprite) : _top(sprite._top), _oam(sprite._oam), _size(sprite._size), _format(sprite._format), _x(sprite._x), _y(sprite._y), _priority(sprite._priority),
-	  _id(sprite._id), _rotationIndex(sprite._rotationIndex), _paletteAlpha(sprite._paletteAlpha), _visibility(sprite._visibility) {
+Sprite::Sprite(const Sprite &sprite)
+	: _top(sprite._top), _oam(sprite._oam), _size(sprite._size), _format(sprite._format), _x(sprite._x), _y(sprite._y),
+	  _priority(sprite._priority), _id(sprite._id), _rotationIndex(sprite._rotationIndex),
+	  _paletteAlpha(sprite._paletteAlpha), _visibility(sprite._visibility) {
 	_assigned[_top][_id]++;
 }
 
@@ -161,7 +163,8 @@ void Sprite::drawImage(int x, int y, const Image &image, float scaleX, float sca
 	} else {
 		for(int i = 0; i < image.height() * scaleY; i++) {
 			for(int j = 0; j < image.width() * scaleX; j++) {
-				u16 px = image.palette()[image.bitmap()[int(i / scaleY) * image.width() + int(j / scaleX)] - image.palOfs()];
+				u16 px =
+					image.palette()[image.bitmap()[int(i / scaleY) * image.width() + int(j / scaleX)] - image.palOfs()];
 				if(px & 0x8000)
 					toncset16(_gfx + (y + i) * _height + j + x, px, 1);
 			}
@@ -183,7 +186,9 @@ void Sprite::drawImageSegment(int x, int y, int imageX, int imageY, int w, int h
 	} else {
 		for(int i = 0; i < h * scaleY; i++) {
 			for(int j = 0; j < w * scaleX; j++) {
-				u16 px = image.palette()[image.bitmap()[(imageY + int(i / scaleY)) * image.width() + imageX + int(j / scaleX)] - image.palOfs()];
+				u16 px = image.palette()[image.bitmap()[(imageY + int(i / scaleY)) * image.width() + imageX +
+														int(j / scaleX)] -
+										 image.palOfs()];
 				if(px & 0x8000)
 					toncset16(_gfx + (y + i) * _height + x + j, px, 1);
 			}

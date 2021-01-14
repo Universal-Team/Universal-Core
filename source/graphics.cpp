@@ -93,20 +93,18 @@ void Graphics::drawRectangle(int x, int y, int w, int h, u8 color1, u8 color2, b
 }
 
 void Graphics::drawScreen() {
-	if (!screens.empty())
+	if(!screens.empty())
 		screens.top()->Draw();
 }
 
 void Graphics::screenLogic(u32 hDown, u32 hHeld, touchPosition touch) {
-	if (!screens.empty())
+	if(!screens.empty())
 		screens.top()->Logic(hDown, hHeld, touch);
 }
 
-void Graphics::setScreen(std::unique_ptr<Screen> screen) {
-	screens.push(std::move(screen));
-}
+void Graphics::setScreen(std::unique_ptr<Screen> screen) { screens.push(std::move(screen)); }
 
 void Graphics::screenBack() {
-	if (screens.size() > 0)
+	if(screens.size() > 0)
 		screens.pop();
 }

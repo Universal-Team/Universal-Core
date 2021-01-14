@@ -72,10 +72,9 @@ public:
 	 * @param y The Y position to draw at
 	 * @param top Whether to draw on teh top or bottom screen, not used for sprites
 	 * @param layer (Optional) The layer to draw on, not used for sprites
-	 * @param channel (Optional) The DMA channel to use
 	 * @param copyPal (Optional) Whether to copy the image's palette into palette VRAM
 	 */
-	void draw(int x, int y, bool top, int layer = 3, int channel = 0, bool copyPal = true);
+	void draw(int x, int y, bool top, int layer = 3, bool copyPal = true);
 
 	/**
 	 * @brief Draws the image to a background layer, slower but can skip alpha, scale, and offset the palette
@@ -100,10 +99,9 @@ public:
 	 * @param h The height to draw
 	 * @param top Whether to draw on the top or bottom screen
 	 * @param layer (Optional) Which background layer to draw on
-	 * @param channel (Optional) The DMA channel to use
 	 * @param copyPal (Optional) Whether to copy the image's palette into palette VRAM
 	 */
-	void drawSegment(int x, int y, int imageX, int imageY, int w, int h, bool top, int layer = 3, int channel = 0, bool copyPal = true);
+	void drawSegment(int x, int y, int imageX, int imageY, int w, int h, bool top, int layer = 3, bool copyPal = true);
 
 	/**
 	 * @brief Draws a segment of an image to a background layer, slower but can skip alpha, scale, and offset the palette

@@ -334,7 +334,8 @@ ITCM_CODE void Font::print(std::u16string_view text, int x, int y, bool top, int
 					for(int i = 0; i < tileHeight; i++) {
 						for(int j = 0; j < tileWidth; j++) {
 							u8 px = fontTiles[(index * tileSize) + (i * tileWidth + j) / 4] >>
-									((3 - ((i * tileWidth + j) % 4)) * 2) & 3;
+									((3 - ((i * tileWidth + j) % 4)) * 2) &
+								3;
 							if(px) {
 #ifdef TEXT_BUFFERED
 								dst[i * 256 + j] = px + (color * 4);
@@ -348,7 +349,7 @@ ITCM_CODE void Font::print(std::u16string_view text, int x, int y, bool top, int
 					for(int i = 0; i < tileHeight * scaleY; i++) {
 						for(int j = 0; j < tileWidth * scaleX; j++) {
 							u8 loc = int(i / scaleY) * tileWidth + int(j / scaleX);
-							u8 px = fontTiles[index * tileSize + loc / 4] >> ((3 - (loc % 4)) * 2) & 3;
+							u8 px  = fontTiles[index * tileSize + loc / 4] >> ((3 - (loc % 4)) * 2) & 3;
 							if(px) {
 #ifdef TEXT_BUFFERED
 								dst[i * 256 + j] = px + (color * 4);

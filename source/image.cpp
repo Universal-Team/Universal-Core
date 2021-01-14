@@ -84,7 +84,7 @@ Image::Image(FILE *file) {
 	fclose(file);
 }
 
-void Image::draw(int x, int y, bool top, int layer, int channel, bool copyPal) {
+void Image::draw(int x, int y, bool top, int layer, bool copyPal) {
 	if(copyPal)
 		tonccpy((top ? BG_PALETTE : BG_PALETTE_SUB) + _palOfs, _palette.data(), _palette.size() * 2);
 
@@ -128,13 +128,13 @@ void Image::drawSpecial(int x, int y, bool top, int layer, float scaleX, float s
 	}
 }
 
-void Image::drawSegment(int x, int y, int imageX, int imageY, int w, int h, bool top, int layer, int channel,
-						bool copyPal) {
+void Image::drawSegment(int x, int y, int imageX, int imageY, int w, int h, bool top, int layer, bool copyPal) {
 	if(copyPal)
 		tonccpy((top ? BG_PALETTE : BG_PALETTE_SUB) + _palOfs, _palette.data(), _palette.size() * 2);
 
 	for(int i = 0; i < h; i++) {
-		tonccpy((u8 *)bgGetGfxPtr(top ? layer : layer + 4) + (y + i) * 256 + x, _bitmap.data() + (imageY + i) * _width + imageX, w);
+		tonccpy((u8 *)bgGetGfxPtr(top ? layer : layer + 4) + (y + i) * 256 + x,
+				_bitmap.data() + (imageY + i) * _width + imageX, w);
 	}
 }
 
