@@ -216,6 +216,9 @@ ITCM_CODE void Font::print(std::u16string_view text, int x, int y, bool top, int
 	}
 	const int xStart = x;
 
+	if(maxWidth != 0)
+		scaleX = std::min(scaleX, (float)maxWidth / (calcWidth(text) * scaleX));
+
 	bool rtl = false;
 	for(const auto c : text) {
 		if(c >= 0x0590 && c <= 0x05FF) {
@@ -273,7 +276,7 @@ ITCM_CODE void Font::print(std::u16string_view text, int x, int y, bool top, int
 
 		if(*it == '\n') {
 			x = xStart;
-			y += tileHeight;
+			y += tileHeight * scaleY;
 			continue;
 		}
 
@@ -322,44 +325,44 @@ ITCM_CODE void Font::print(std::u16string_view text, int x, int y, bool top, int
 			// Don't draw off screen chars
 			if(x >= 0 && x + fontWidths[(index * 3) + 2] < 256 && y >= 0 && y + tileHeight < 192) {
 #ifdef TEXT_BUFFERED
-				u8 *dst = textBuf[top] + x + fontWidths[(index * 3)];
+				u8 *dst = textBuf[top] + y * 256 + x + fontWidths[(index * 3)];
 #else
-				u8 *dst = (u8 *)bgGetGfxPtr(top ? layer : layer + 4) + x + fontWidths[(index * 3)];
+				u8 *dst = (u8 *)bgGetGfxPtr(top ? layer : layer + 4) + y * 256 + x + fontWidths[(index * 3)];
 #endif
 				// Use faster integer math if scale is 1
 				if(scaleX == 1.0f && scaleY == 1.0f) {
 					for(int i = 0; i < tileHeight; i++) {
 						for(int j = 0; j < tileWidth; j++) {
 							u8 px = fontTiles[(index * tileSize) + (i * tileWidth + j) / 4] >>
-									((3 - ((i * tileWidth + j) % 4)) * 2) &
-								3;
-							if(px)
+									((3 - ((i * tileWidth + j) % 4)) * 2) & 3;
+							if(px) {
 #ifdef TEXT_BUFFERED
-								dst[(y + i) * 256 + j] = px + (color * 4);
+								dst[i * 256 + j] = px + (color * 4);
 #else
-								toncset(dst + (y + i) * 256 + j, px + (color * 4), 1);
+								toncset(dst + i * 256 + j, px + (color * 4), 1);
 #endif
+							}
 						}
 					}
 				} else {
-					for(float i = 0.0f; i < tileHeight; i += 1 / scaleY) {
-						for(float j = 0.0f; j < tileWidth; j += 1 / scaleX) {
-							u8 px = fontTiles[(index * tileSize) + int(i * tileWidth + j) / 4] >>
-									((3 - (int(i * tileWidth + j) % 4)) * 2) &
-								3;
-							if(px)
+					for(int i = 0; i < tileHeight * scaleY; i++) {
+						for(int j = 0; j < tileWidth * scaleX; j++) {
+							u8 loc = int(i / scaleY) * tileWidth + int(j / scaleX);
+							u8 px = fontTiles[index * tileSize + loc / 4] >> ((3 - (loc % 4)) * 2) & 3;
+							if(px) {
 #ifdef TEXT_BUFFERED
-								dst[int((y + i) * 256 + j)] = px + (color * 4);
+								dst[i * 256 + j] = px + (color * 4);
 #else
-								toncset(dst + int((y + i) * 256 + j), px + (color * 4), 1);
+								toncset(dst + i * 256 + j, px + (color * 4), 1);
 #endif
+							}
 						}
 					}
 				}
 			}
 		}
 
-		x += fontWidths[(index * 3) + 2];
+		x += fontWidths[(index * 3) + 2] * scaleX;
 	}
 }
 

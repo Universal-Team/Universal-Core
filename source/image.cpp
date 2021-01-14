@@ -93,10 +93,10 @@ void Image::draw(int x, int y, bool top, int layer, int channel, bool copyPal) {
 
 	// If full width and X is 0, copy it all in one go
 	if(_width == width && x == 0) {
-		dmaCopyHalfWords(channel, _bitmap.data(), dst, _width * _height);
+		tonccpy(dst, _bitmap.data(), _width * _height);
 	} else {
 		for(int i = 0; i < _height; i++) {
-			dmaCopyHalfWords(channel, _bitmap.data() + (i * _width), dst + (y + i) * 256 + x, _width);
+			tonccpy(dst + (y + i) * 256 + x, _bitmap.data() + i * _width, _width);
 		}
 	}
 }
@@ -106,7 +106,7 @@ void Image::drawSpecial(int x, int y, bool top, int layer, float scaleX, float s
 	if(copyPal)
 		tonccpy((top ? BG_PALETTE : BG_PALETTE_SUB) + _palOfs + paletteOffset, _palette.data(), _palette.size() * 2);
 
-	u8 *dst = (u8 *)bgGetGfxPtr(top ? layer : layer + 4);
+	u8 *dst = (u8 *)bgGetGfxPtr(top ? layer : layer + 4) + y * 256 + x;
 
 	// If the scale is 1 use faster integer math
 	if(scaleX == 1.0f && scaleY == 1.0f) {
@@ -114,15 +114,15 @@ void Image::drawSpecial(int x, int y, bool top, int layer, float scaleX, float s
 			for(float j = 0; j < _width; j++) {
 				u8 px = _bitmap[i * _width + j];
 				if(_palette[px - _palOfs] & 0x8000)
-					toncset(dst + int((y + i) * 256 + x + j), px + paletteOffset, 1);
+					toncset(dst + i * 256 + x, px + paletteOffset, 1);
 			}
 		}
 	} else {
-		for(float i = 0.0f; i < _height; i += 1 / scaleY) {
-			for(float j = 0.0f; j < _width; j += 1 / scaleX) {
-				u8 px = _bitmap[int((i * _width) + j)];
+		for(int i = 0; i < _height * scaleY; i++) {
+			for(int j = 0; j < _width * scaleX; j++) {
+				u8 px = _bitmap[int(i / scaleY) * _width + int(j / scaleX)];
 				if(_palette[px - _palOfs] & 0x8000)
-					toncset(dst + int((y + i) * 256 + x + j), px + paletteOffset, 1);
+					toncset(dst + i * 256 + j, px + paletteOffset, 1);
 			}
 		}
 	}
@@ -134,8 +134,7 @@ void Image::drawSegment(int x, int y, int imageX, int imageY, int w, int h, bool
 		tonccpy((top ? BG_PALETTE : BG_PALETTE_SUB) + _palOfs, _palette.data(), _palette.size() * 2);
 
 	for(int i = 0; i < h; i++) {
-		dmaCopyHalfWords(channel, _bitmap.data() + ((imageY + i) * _width) + imageX,
-						 (u8 *)bgGetGfxPtr(top ? layer : layer + 4) + ((y + i) * 256) + x, w);
+		tonccpy((u8 *)bgGetGfxPtr(top ? layer : layer + 4) + (y + i) * 256 + x, _bitmap.data() + (imageY + i) * _width + imageX, w);
 	}
 }
 
@@ -144,7 +143,7 @@ void Image::drawSegmentSpecial(int x, int y, int imageX, int imageY, int w, int 
 	if(copyPal)
 		tonccpy((top ? BG_PALETTE : BG_PALETTE_SUB) + _palOfs + paletteOffset, _palette.data(), _palette.size() * 2);
 
-	u8 *dst = (u8 *)bgGetGfxPtr(top ? layer : layer + 4);
+	u8 *dst = (u8 *)bgGetGfxPtr(top ? layer : layer + 4) + y * 256 + x;
 
 	// If the scale is 1 use faster integer math
 	if(scaleX == 1.0f && scaleY == 1.0f) {
@@ -152,15 +151,15 @@ void Image::drawSegmentSpecial(int x, int y, int imageX, int imageY, int w, int 
 			for(int j = 0; j < w; j++) {
 				u8 px = _bitmap[i * _width + j];
 				if(_palette[px - _palOfs] & 0x8000)
-					toncset(dst + ((y + i) * 256 + x + j), px + paletteOffset, 1);
+					toncset(dst + i * 256 + j, px + paletteOffset, 1);
 			}
 		}
 	} else {
-		for(float i = 0; i < h; i += 1 / scaleX) {
-			for(float j = 0; j < _width; j += 1 / scaleY) {
-				u8 px = _bitmap[i * _width + j];
+		for(int i = 0; i < h * scaleY; i++) {
+			for(int j = 0; j < w * scaleX; j++) {
+				u8 px = _bitmap[(imageY + int(i / scaleY)) * _width + imageX + int(j / scaleX)];
 				if(_palette[px - _palOfs] & 0x8000)
-					toncset(dst + int((y + i) * 256 + x + j), px + paletteOffset, 1);
+					toncset(dst + i * 256 + j, px + paletteOffset, 1);
 			}
 		}
 	}
