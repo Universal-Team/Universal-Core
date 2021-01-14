@@ -29,9 +29,11 @@
 #include "tonccpy.h"
 
 #include <nds.h>
+#include <stack>
 
 int Graphics::bg3Main, Graphics::bg2Main, Graphics::bg3Sub, Graphics::bg2Sub;
 bool Graphics::wideScreen = false;
+static std::stack<std::unique_ptr<Screen>> screens;
 
 void Graphics::init(void) {
 	// Initialize video mode
@@ -88,4 +90,23 @@ void Graphics::drawRectangle(int x, int y, int w, int h, u8 color1, u8 color2, b
 	for(int i = 0; i < h; i++) {
 		toncset(dst + ((y + i) * 256 + x), ((i % 2) ? color1 : color2), w);
 	}
+}
+
+void Graphics::drawScreen() {
+	if (!screens.empty())
+		screens.top()->Draw();
+}
+
+void Graphics::screenLogic(u32 hDown, u32 hHeld, touchPosition touch) {
+	if (!screens.empty())
+		screens.top()->Logic(hDown, hHeld, touch);
+}
+
+void Graphics::setScreen(std::unique_ptr<Screen> screen) {
+	screens.push(std::move(screen));
+}
+
+void Graphics::screenBack() {
+	if (screens.size() > 0)
+		screens.pop();
 }

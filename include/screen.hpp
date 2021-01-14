@@ -28,7 +28,7 @@
 #define _UNIVERSAL_CORE_SCREEN_HPP
 
 #include <memory>
-#include <nds/ndstypes.h>
+#include <nds.h>
 
 class Screen {
 public:
