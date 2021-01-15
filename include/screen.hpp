@@ -29,12 +29,39 @@
 
 #include <memory>
 #include <nds.h>
+#include <stack>
 
 class Screen {
 public:
+	static std::stack<std::unique_ptr<Screen>> screens;
+
 	virtual ~Screen() {}
 	virtual void Logic(u32 hDown, u32 hHeld, touchPosition touch) = 0;
 	virtual void Draw() const = 0;
+
+	/**
+	* @brief Draws the setted screen
+	*/
+	static void doDraw();
+
+	/**
+	* @brief The current screen logic
+	* @param hDown The keysDown variable
+	* @param hHeld The keysHeld variable
+	* @param touch The TouchPosition variable
+	*/
+	static void doLogic(u32 hDown, u32 hHeld, touchPosition touch);
+
+	/**
+	* @brief Set a specific Screen with the Screen class
+	* @param screen The screen which to set
+	*/
+	static void set(std::unique_ptr<Screen> screen);
+
+	/**
+	* @brief Goes a screen back
+	*/
+	static void back();
 };
 
 #endif

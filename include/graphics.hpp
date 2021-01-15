@@ -84,30 +84,6 @@ namespace Graphics {
 	* @param layer The layer to draw to
 	*/
 	void drawRectangle(int x, int y, int w, int h, u8 color1, u8 color2, bool top, bool layer);
-
-	/**
-	* @brief Draws the setted screen
-	*/
-	void drawScreen();
-
-	/**
-	* @brief The current screen logic
-	* @param hDown The keysDown variable
-	* @param hHeld The keysHeld variable
-	* @param touch The TouchPosition variable
-	*/
-	void screenLogic(u32 hDown, u32 hHeld, touchPosition touch);
-
-	/**
-	* @brief Set a specific Screen with the Screen class
-	* @param screen The screen which to set
-	*/
-	void setScreen(std::unique_ptr<Screen> screen);
-
-	/**
-	* @brief Goes a screen back
-	*/
-	void screenBack();
 }
 
 #endif
