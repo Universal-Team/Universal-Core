@@ -70,8 +70,10 @@ void tonccpy(void *dst, const void *src, uint size) {
 	}
 
 	// Tail: 1 byte.
-	if(size & 1)
-		*dst16 = (*dst16 & ~0xFF) | *src8;
+	if(size & 1) {
+		*dst16 &= ~0xFF;
+		*dst16 |= *src8;
+	}
 }
 //# toncset.c
 

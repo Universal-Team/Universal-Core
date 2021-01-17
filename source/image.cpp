@@ -88,15 +88,14 @@ void Image::draw(int x, int y, bool top, int layer, bool copyPal) {
 	if(copyPal)
 		tonccpy((top ? BG_PALETTE : BG_PALETTE_SUB) + _palOfs, _palette.data(), _palette.size() * 2);
 
-	u8 *dst   = (u8 *)bgGetGfxPtr(top ? layer : layer + 4);
-	int width = 256;
+	u8 *dst = (u8 *)bgGetGfxPtr(top ? layer : layer + 4) + y * 256 + x;
 
 	// If full width and X is 0, copy it all in one go
-	if(_width == width && x == 0) {
+	if(_width == 256 && x == 0) {
 		tonccpy(dst, _bitmap.data(), _width * _height);
 	} else {
 		for(int i = 0; i < _height; i++) {
-			tonccpy(dst + (y + i) * 256 + x, _bitmap.data() + i * _width, _width);
+			tonccpy(dst + i * 256, _bitmap.data() + i * _width, _width);
 		}
 	}
 }
