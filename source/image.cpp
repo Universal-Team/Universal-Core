@@ -110,7 +110,7 @@ void Image::drawSpecial(int x, int y, bool top, int layer, float scaleX, float s
 	// If the scale is 1 use faster integer math
 	if(scaleX == 1.0f && scaleY == 1.0f) {
 		for(int i = 0; i < _height; i++) {
-			for(float j = 0; j < _width; j++) {
+			for(int j = 0; j < _width; j++) {
 				u8 px = _bitmap[i * _width + j];
 				if(_palette[px - _palOfs] & 0x8000)
 					toncset(dst + i * 256 + j, px + paletteOffset, 1);
