@@ -183,7 +183,16 @@ int Font::calcWidth(std::u16string_view text) {
 }
 
 ITCM_CODE void Font::print(std::u16string_view text, int x, int y, bool top, int layer, Alignment align, int maxWidth,
-						   int color, float scaleX, float scaleY, Sprite *sprite) {
+						   int color, float scaleX, float scaleY, bool rtl, Sprite *sprite) {
+	// If RTL isn't forced, check for RTL text
+	for(const auto c : text) {
+		if(c >= 0x0590 && c <= 0x05FF) {
+			rtl = true;
+			break;
+		}
+	}
+	auto ltrBegin = text.end(), ltrEnd = text.end();
+
 	// Adjust x for alignment
 	switch(align) {
 		case Alignment::left: {
@@ -192,7 +201,7 @@ ITCM_CODE void Font::print(std::u16string_view text, int x, int y, bool top, int
 		case Alignment::center: {
 			size_t newline = text.find('\n');
 			while(newline != text.npos) {
-				print(text.substr(0, newline), x, y, top, layer, align, maxWidth, color, scaleX, scaleY, sprite);
+				print(text.substr(0, newline), x, y, top, layer, align, maxWidth, color, scaleX, scaleY, rtl, sprite);
 				text    = text.substr(newline + 1);
 				newline = text.find('\n');
 				y += tileHeight;
@@ -205,7 +214,7 @@ ITCM_CODE void Font::print(std::u16string_view text, int x, int y, bool top, int
 			size_t newline = text.find('\n');
 			while(newline != text.npos) {
 				print(text.substr(0, newline), x - (calcWidth(text.substr(0, newline)) * scaleX), y, top, layer,
-					  Alignment::left, maxWidth, color, scaleX, scaleY, sprite);
+					  Alignment::left, maxWidth, color, scaleX, scaleY, rtl, sprite);
 				text    = text.substr(newline + 1);
 				newline = text.find('\n');
 				y += tileHeight;
@@ -219,21 +228,12 @@ ITCM_CODE void Font::print(std::u16string_view text, int x, int y, bool top, int
 	if(maxWidth != 0)
 		scaleX = std::min(scaleX, (float)maxWidth / (calcWidth(text) * scaleX));
 
-	bool rtl = false;
-	for(const auto c : text) {
-		if(c >= 0x0590 && c <= 0x05FF) {
-			rtl = true;
-			break;
-		}
-	}
-	auto ltrBegin = text.end(), ltrEnd = text.end();
-
 	// Loop through string and print it
 	for(auto it = (rtl ? text.end() - 1 : text.begin()); true; it += (rtl ? -1 : 1)) {
 		// If we hit the end of the string in an LTR section of an RTL
 		// string, it may not be done, if so jump back to printing RTL
 		if(it == (rtl ? text.begin() - 1 : text.end())) {
-			if(ltrBegin == text.end()) {
+			if(ltrBegin == text.end() || (ltrBegin == text.begin() && ltrEnd == text.end())) {
 				break;
 			} else {
 				it       = ltrBegin;
@@ -242,7 +242,7 @@ ITCM_CODE void Font::print(std::u16string_view text, int x, int y, bool top, int
 			}
 		}
 
-		// If at the end of an LRT section within RTL, jump back to the RTL
+		// If at the end of an LTR section within RTL, jump back to the RTL
 		if(it == ltrEnd && ltrBegin != text.end()) {
 			if(ltrBegin == text.begin())
 				break;
@@ -257,19 +257,22 @@ ITCM_CODE void Font::print(std::u16string_view text, int x, int y, bool top, int
 					*it >= 127))) {
 			// Save where we are as the end of the LTR section
 			ltrEnd = it + 1;
+
 			// Go back until an RTL character or the start of the string
 			while((*it < 0x0590 || *it > 0x05FF) && it != text.begin())
 				it--;
+
 			// Save where we are to return to after printing the LTR section
 			ltrBegin = it;
-			// If not at the start, then we're on the first RTL right now, so add one
-			if(it != text.begin())
+
+			// If on an RTL char right now, add one
+			if(*it >= 0x0590 && *it <= 0x05FF) {
 				it++;
-			// Skip all punctuation at the end if not at beginning
-			while(it != text.begin() &&
-				  (*it < '0' || (*it > '9' && *it < 'A') || (*it > 'Z' && *it < 'a') || (*it > 'z' && *it < 127))) {
-				it++;
-				ltrBegin++;
+				// And skip all punctuation at the end if not at beginning
+				while(*it < '0' || (*it > '9' && *it < 'A') || (*it > 'Z' && *it < 'a') || (*it > 'z' && *it < 127)) {
+					it++;
+					ltrBegin++;
+				}
 			}
 			rtl = false;
 		}
