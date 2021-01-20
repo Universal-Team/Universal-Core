@@ -113,7 +113,7 @@ void Image::drawSpecial(int x, int y, bool top, int layer, float scaleX, float s
 			for(float j = 0; j < _width; j++) {
 				u8 px = _bitmap[i * _width + j];
 				if(_palette[px - _palOfs] & 0x8000)
-					toncset(dst + i * 256 + x, px + paletteOffset, 1);
+					toncset(dst + i * 256 + j, px + paletteOffset, 1);
 			}
 		}
 	} else {
