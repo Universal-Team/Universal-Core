@@ -287,14 +287,28 @@ ITCM_CODE void Font::print(std::u16string_view text, int x, int y, bool top, int
 
 		// Brackets are flipped in RTL
 		if(rtl) {
-			if(*it == '(')
-				index = charIndex(')');
-			else if(*it == ')')
-				index = charIndex('(');
-			else if(*it == '[')
-				index = charIndex(']');
-			else if(*it == ']')
-				index = charIndex('[');
+			switch(*it) {
+				case '(':
+					index = getCharIndex(')');
+					break;
+				case ')':
+					index = getCharIndex('(');
+					break;
+				case '[':
+					index = getCharIndex(']');
+					break;
+				case ']':
+					index = getCharIndex('[');
+					break;
+				case '<':
+					index = getCharIndex('>');
+					break;
+				case '>':
+					index = getCharIndex('<');
+					break;
+				default:
+					break;
+			}
 		}
 
 		if(sprite) {
