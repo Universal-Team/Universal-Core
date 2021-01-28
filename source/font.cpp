@@ -266,13 +266,14 @@ ITCM_CODE void Font::print(std::u16string_view text, int x, int y, bool top, int
 			ltrBegin = it;
 
 			// If on an RTL char right now, add one
-			if(*it >= 0x0590 && *it <= 0x05FF) {
+			if(*it >= 0x0590 && *it <= 0x05FF)
 				it++;
-				// And skip all punctuation at the end if not at beginning
-				while(*it < '0' || (*it > '9' && *it < 'A') || (*it > 'Z' && *it < 'a') || (*it > 'z' && *it < 127)) {
-					it++;
+
+			// Skip all punctuation at the end
+			while(*it < '0' || (*it > '9' && *it < 'A') || (*it > 'Z' && *it < 'a') || (*it > 'z' && *it < 127)) {
+				if(it != text.begin())
 					ltrBegin++;
-				}
+				it++;
 			}
 			rtl = false;
 		}
