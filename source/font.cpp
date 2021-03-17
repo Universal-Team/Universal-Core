@@ -290,22 +290,22 @@ ITCM_CODE void Font::print(std::u16string_view text, int x, int y, bool top, int
 		if(rtl) {
 			switch(*it) {
 				case '(':
-					index = getCharIndex(')');
+					index = charIndex(')');
 					break;
 				case ')':
-					index = getCharIndex('(');
+					index = charIndex('(');
 					break;
 				case '[':
-					index = getCharIndex(']');
+					index = charIndex(']');
 					break;
 				case ']':
-					index = getCharIndex('[');
+					index = charIndex('[');
 					break;
 				case '<':
-					index = getCharIndex('>');
+					index = charIndex('>');
 					break;
 				case '>':
-					index = getCharIndex('<');
+					index = charIndex('<');
 					break;
 				default:
 					break;
