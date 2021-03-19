@@ -96,7 +96,7 @@ namespace Gui {
 	/*
 		Reinit the GUI.
 	*/
-	Result reinit(void);
+	Result reinit(CFG_Region fontRegion = CFG_REGION_USA);
 
 	/*
 		Draws a centered String.

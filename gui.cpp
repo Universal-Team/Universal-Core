@@ -152,12 +152,12 @@ void Gui::exit(void) {
 /*
 	Reinitialize the GUI.
 */
-Result Gui::reinit(void) {
+Result Gui::reinit(CFG_Region fontRegion) {
 	C2D_TextBufDelete(TextBuf);
 	C2D_Fini();
 	C3D_Fini();
 
-	return Gui::init();
+	return Gui::init(fontRegion);
 }
 
 /*
