@@ -54,7 +54,7 @@ namespace Gui {
 		Initialize the GUI with Citro2D & Citro3D and initialize the Textbuffer.
 		call this when initializing.
 	*/
-	Result init(void);
+	Result init(CFG_Region fontRegion = CFG_REGION_USA);
 
 	/*
 		Load a Font. (BCFNT)

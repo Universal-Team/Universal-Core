@@ -74,7 +74,7 @@ void Gui::DrawSprite(C2D_SpriteSheet sheet, size_t imgindex, int x, int y, float
 	Contains initializing Citro2D, Citro3D and the screen targets.
 	Call this when initing the app.
 */
-Result Gui::init(void) {
+Result Gui::init(CFG_Region fontRegion) {
 	C3D_Init(C3D_DEFAULT_CMDBUF_SIZE);
 	C2D_Init(C2D_DEFAULT_MAX_OBJECTS);
 	C2D_Prepare();
@@ -86,7 +86,7 @@ Result Gui::init(void) {
 
 	/* Load Textbuffer. */
 	TextBuf = C2D_TextBufNew(4096);
-	Font = C2D_FontLoadSystem(CFG_REGION_USA); // Load System font.
+	Font = C2D_FontLoadSystem(fontRegion); // Load System font.
 	return 0;
 }
 
