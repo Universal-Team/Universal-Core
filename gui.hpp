@@ -53,8 +53,17 @@ namespace Gui {
 	/*
 		Initialize the GUI with Citro2D & Citro3D and initialize the Textbuffer.
 		call this when initializing.
+
+		fontRegion: The region to use for the system font.
 	*/
 	Result init(CFG_Region fontRegion = CFG_REGION_USA);
+
+	/*
+		Load a system font.
+
+		fontRegion: The region to use for the system font.
+	*/
+	void loadSystemFont(CFG_Region fontRegion = CFG_REGION_USA);
 
 	/*
 		Load a Font. (BCFNT)
@@ -95,6 +104,8 @@ namespace Gui {
 
 	/*
 		Reinit the GUI.
+
+		fontRegion: The region to use for the system font.
 	*/
 	Result reinit(CFG_Region fontRegion = CFG_REGION_USA);
 

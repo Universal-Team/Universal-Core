@@ -42,6 +42,7 @@ bool currentScreen = false;
 bool fadeout = false, fadein = false, fadeout2 = false, fadein2 = false;
 int fadealpha = 0;
 int fadecolor = 0;
+CFG_Region loadedSystemFont = (CFG_Region)-1;
 
 /*
 	Clear the Text Buffer.
@@ -73,6 +74,8 @@ void Gui::DrawSprite(C2D_SpriteSheet sheet, size_t imgindex, int x, int y, float
 
 	Contains initializing Citro2D, Citro3D and the screen targets.
 	Call this when initing the app.
+
+	fontRegion: The region to use for the system font.
 */
 Result Gui::init(CFG_Region fontRegion) {
 	C3D_Init(C3D_DEFAULT_CMDBUF_SIZE);
@@ -86,8 +89,20 @@ Result Gui::init(CFG_Region fontRegion) {
 
 	/* Load Textbuffer. */
 	TextBuf = C2D_TextBufNew(4096);
-	Font = C2D_FontLoadSystem(fontRegion); // Load System font.
+	loadSystemFont(fontRegion);
 	return 0;
+}
+
+/*
+	Load a system font.
+
+	fontRegion: The region to use for the system font.
+*/
+void Gui::loadSystemFont(CFG_Region fontRegion) {
+	if(loadedSystemFont != fontRegion) {
+		Font = C2D_FontLoadSystem(fontRegion);
+		loadedSystemFont = fontRegion;
+	}
 }
 
 /*
@@ -151,6 +166,8 @@ void Gui::exit(void) {
 
 /*
 	Reinitialize the GUI.
+
+	fontRegion: The region to use for the system font.
 */
 Result Gui::reinit(CFG_Region fontRegion) {
 	C2D_TextBufDelete(TextBuf);
@@ -197,6 +214,22 @@ void Gui::DrawString(float x, float y, float size, u32 color, std::string Text, 
 	else C2D_TextFontParse(&c2d_text, Font, TextBuf, Text.c_str());
 
 	C2D_TextOptimize(&c2d_text);
+
+	if(!fnt) {
+		switch(loadedSystemFont) {
+			case CFG_REGION_CHN:
+				size *= 1.13f;
+				break;
+			case CFG_REGION_TWN:
+				size *= 1.5f;
+				break;
+			case CFG_REGION_KOR:
+				size *= 1.1f;
+				break;
+			default:
+				break;
+		}
+	}
 
 	float heightScale;
 
