@@ -218,13 +218,14 @@ void Gui::DrawString(float x, float y, float size, u32 color, std::string Text, 
 	if(!fnt) {
 		switch(loadedSystemFont) {
 			case CFG_REGION_CHN:
-				size *= 1.13f;
+				y += 3.0f * size;
 				break;
 			case CFG_REGION_TWN:
-				size *= 1.5f;
+				size *= 1.3f;
+				y += 2.5f * size;
 				break;
 			case CFG_REGION_KOR:
-				size *= 1.1f;
+				y += 3.0f * size;
 				break;
 			default:
 				break;
