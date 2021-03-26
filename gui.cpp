@@ -190,7 +190,7 @@ Result Gui::reinit(CFG_Region fontRegion) {
 	C2D_Font fnt: (Optional) The wanted C2D_Font. Is nullptr by default.
 	int flags: (Optional) C2D text flags to use.
 */
-void Gui::DrawStringCentered(float x, float y, float size, u32 color, std::string Text, int maxWidth, int maxHeight, C2D_Font fnt, int flags) {
+void Gui::DrawStringCentered(float x, float y, float size, u32 color, const std::string &Text, int maxWidth, int maxHeight, C2D_Font fnt, int flags) {
 	Gui::DrawString(x +(currentScreen ? 200 : 160), y, size, color, Text, maxWidth, maxHeight, fnt, flags | C2D_AlignCenter);
 }
 
@@ -207,7 +207,7 @@ void Gui::DrawStringCentered(float x, float y, float size, u32 color, std::strin
 	C2D_Font fnt: (Optional) The wanted C2D_Font. Is nullptr by default.
 	int flags: (Optional) C2D text flags to use.
 */
-void Gui::DrawString(float x, float y, float size, u32 color, std::string Text, int maxWidth, int maxHeight, C2D_Font fnt, int flags) {
+void Gui::DrawString(float x, float y, float size, u32 color, const std::string &Text, int maxWidth, int maxHeight, C2D_Font fnt, int flags) {
 	C2D_Text c2d_text;
 
 	if (fnt) C2D_TextFontParse(&c2d_text, fnt, TextBuf, Text.c_str());
@@ -259,7 +259,7 @@ void Gui::DrawString(float x, float y, float size, u32 color, std::string Text, 
 	std::string Text: The Text.
 	C2D_Font fnt: (Optional) The wanted C2D_Font. Is nullptr by default.
 */
-float Gui::GetStringWidth(float size, std::string Text, C2D_Font fnt) {
+float Gui::GetStringWidth(float size, const std::string &Text, C2D_Font fnt) {
 	float width = 0;
 
 	if (fnt) GetStringSize(size, &width, NULL, Text, fnt);
@@ -277,7 +277,7 @@ float Gui::GetStringWidth(float size, std::string Text, C2D_Font fnt) {
 	std::string Text: The Text.
 	C2D_Font fnt: (Optional) The wanted C2D_Font. Is nullptr by default.
 */
-void Gui::GetStringSize(float size, float *width, float *height, std::string Text, C2D_Font fnt) {
+void Gui::GetStringSize(float size, float *width, float *height, const std::string &Text, C2D_Font fnt) {
 	C2D_Text c2d_text;
 
 	if (fnt) C2D_TextFontParse(&c2d_text, fnt, TextBuf, Text.c_str());
@@ -294,11 +294,11 @@ void Gui::GetStringSize(float size, float *width, float *height, std::string Tex
 	std::string Text: The Text.
 	C2D_Font fnt: (Optional) The wanted C2D_Font. Is nullptr by default.
 */
-float Gui::GetStringHeight(float size, std::string Text, C2D_Font fnt) {
+float Gui::GetStringHeight(float size, const std::string &Text, C2D_Font fnt) {
 	float height = 0;
 
-	if (fnt) GetStringSize(size, NULL, &height, Text.c_str(), fnt);
-	else GetStringSize(size, NULL, &height, Text.c_str());
+	if (fnt) GetStringSize(size, NULL, &height, Text, fnt);
+	else GetStringSize(size, NULL, &height, Text);
 
 	return height;
 }
