@@ -26,6 +26,8 @@
 
 #include "image.hpp"
 
+#include "gui.hpp"
+
 #include "tonccpy.h"
 
 Image::Image(const std::vector<std::string> &paths) {
@@ -84,11 +86,14 @@ Image::Image(FILE *file) {
 	fclose(file);
 }
 
-void Image::draw(int x, int y, bool top, int layer, bool copyPal) {
-	if(copyPal)
-		tonccpy((top ? BG_PALETTE : BG_PALETTE_SUB) + _palOfs, _palette.data(), _palette.size() * 2);
+void Image::draw(int x, int y, bool copyPal) {
+	SCALE_3DS(x);
+	SCALE_3DS(y);
 
-	u8 *dst = (u8 *)bgGetGfxPtr(top ? layer : layer + 4) + y * 256 + x;
+	if(copyPal)
+		tonccpy((Gui::top ? BG_PALETTE : BG_PALETTE_SUB) + _palOfs, _palette.data(), _palette.size() * 2);
+
+	u8 *dst = (u8 *)bgGetGfxPtr(Gui::top ? 3 : 7) + y * 256 + x;
 
 	// If full width and X is 0, copy it all in one go
 	if(_width == 256 && x == 0) {
@@ -100,16 +105,22 @@ void Image::draw(int x, int y, bool top, int layer, bool copyPal) {
 	}
 }
 
-void Image::drawSpecial(int x, int y, bool top, int layer, float scaleX, float scaleY, int paletteOffset,
+void Image::drawSpecial(int x, int y, float scaleX, float scaleY, int paletteOffset,
 						bool copyPal) {
-	if(copyPal)
-		tonccpy((top ? BG_PALETTE : BG_PALETTE_SUB) + _palOfs + paletteOffset, _palette.data(), _palette.size() * 2);
+	SCALE_3DS(x);
+	SCALE_3DS(y);
 
-	u8 *dst = (u8 *)bgGetGfxPtr(top ? layer : layer + 4) + y * 256 + x;
+	if(copyPal)
+		tonccpy((Gui::top ? BG_PALETTE : BG_PALETTE_SUB) + _palOfs + paletteOffset, _palette.data(), _palette.size() * 2);
+
+	u8 *dst = (u8 *)bgGetGfxPtr(Gui::top ? 3 : 7) + y * 256 + x;
 
 	// If the scale is 1 use faster integer math
+	nocashMessage("a");
 	if(scaleX == 1.0f && scaleY == 1.0f) {
+		nocashMessage("b");
 		for(int i = 0; i < _height; i++) {
+		nocashMessage("d");
 			for(int j = 0; j < _width; j++) {
 				u8 px = _bitmap[i * _width + j];
 				if(_palette[px - _palOfs] & 0x8000)
@@ -117,6 +128,7 @@ void Image::drawSpecial(int x, int y, bool top, int layer, float scaleX, float s
 			}
 		}
 	} else {
+		nocashMessage("c");
 		for(int i = 0; i < _height * scaleY; i++) {
 			for(int j = 0; j < _width * scaleX; j++) {
 				u8 px = _bitmap[int(i / scaleY) * _width + int(j / scaleX)];
@@ -127,22 +139,28 @@ void Image::drawSpecial(int x, int y, bool top, int layer, float scaleX, float s
 	}
 }
 
-void Image::drawSegment(int x, int y, int imageX, int imageY, int w, int h, bool top, int layer, bool copyPal) {
+void Image::drawSegment(int x, int y, int imageX, int imageY, int w, int h, bool copyPal) {
+	SCALE_3DS(x);
+	SCALE_3DS(y);
+
 	if(copyPal)
-		tonccpy((top ? BG_PALETTE : BG_PALETTE_SUB) + _palOfs, _palette.data(), _palette.size() * 2);
+		tonccpy((Gui::top ? BG_PALETTE : BG_PALETTE_SUB) + _palOfs, _palette.data(), _palette.size() * 2);
 
 	for(int i = 0; i < h; i++) {
-		tonccpy((u8 *)bgGetGfxPtr(top ? layer : layer + 4) + (y + i) * 256 + x,
+		tonccpy((u8 *)bgGetGfxPtr(Gui::top ? 3 : 7) + (y + i) * 256 + x,
 				_bitmap.data() + (imageY + i) * _width + imageX, w);
 	}
 }
 
-void Image::drawSegmentSpecial(int x, int y, int imageX, int imageY, int w, int h, bool top, int layer, float scaleX,
+void Image::drawSegmentSpecial(int x, int y, int imageX, int imageY, int w, int h, float scaleX,
 							   float scaleY, int paletteOffset, bool copyPal) {
-	if(copyPal)
-		tonccpy((top ? BG_PALETTE : BG_PALETTE_SUB) + _palOfs + paletteOffset, _palette.data(), _palette.size() * 2);
+	SCALE_3DS(x);
+	SCALE_3DS(y);
 
-	u8 *dst = (u8 *)bgGetGfxPtr(top ? layer : layer + 4) + y * 256 + x;
+	if(copyPal)
+		tonccpy((Gui::top ? BG_PALETTE : BG_PALETTE_SUB) + _palOfs + paletteOffset, _palette.data(), _palette.size() * 2);
+
+	u8 *dst = (u8 *)bgGetGfxPtr(Gui::top ? 3 : 7) + y * 256 + x;
 
 	// If the scale is 1 use faster integer math
 	if(scaleX == 1.0f && scaleY == 1.0f) {

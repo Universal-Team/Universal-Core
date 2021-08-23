@@ -24,16 +24,18 @@
  *         reasonable ways as different from the original version.
  */
 
-#include "graphics.hpp"
+#include "gui.hpp"
+#include "gui.hpp"
 
 #include "tonccpy.h"
 
 #include <nds.h>
 
-int Graphics::bg3Main, Graphics::bg2Main, Graphics::bg3Sub, Graphics::bg2Sub;
-bool Graphics::wideScreen = false;
+int Gui::bg3Main, Gui::bg2Main, Gui::bg3Sub, Gui::bg2Sub;
+bool Gui::widescreen = false;
+bool Gui::top = false;
 
-void Graphics::init(void) {
+void Gui::init(void) {
 	// Initialize video mode
 	videoSetMode(MODE_5_2D);
 	videoSetModeSub(MODE_5_2D);
@@ -63,29 +65,22 @@ void Graphics::init(void) {
 	REG_BLDCNT_SUB = 1 << 11;
 }
 
-void Graphics::clear(bool top, int layer) { toncset(bgGetGfxPtr(top ? layer : layer + 4), 0, 256 * 192); }
-
-void Graphics::drawOutline(int x, int y, int w, int h, u8 color, bool top, int layer) {
-	u8 *dst = (u8 *)bgGetGfxPtr(top ? layer : layer + 4);
-	h += y;
-	if(y >= 0 && y <= 192)
-		toncset(dst + y * 256 + std::max(x, 0), color, std::min(w, 256 - x));
-	for(y++; y < (h - 1); y++) {
-		if(y >= 0 && y <= 192 && x >= 0)
-			toncset(dst + y * 256 + x, color, 1);
-		if(y >= 0 && y <= 192 && x + w <= 256)
-			toncset(dst + y * 256 + x + w - 1, color, 1);
-	}
-	if(y >= 0 && y <= 192)
-		toncset(dst + y * 256 + std::max(x, 0), color, std::min(w, 256 - x));
+void Gui::clear(bool top) {
+	toncset(bgGetGfxPtr(top ? bg3Main : bg3Sub), 0, 256 * 192);
 }
 
-void Graphics::drawRectangle(int x, int y, int w, int h, u8 color, bool top, bool layer) {
-	Graphics::drawRectangle(x, y, w, h, color, color, top, layer);
+void Gui::ScreenDraw(bool top) {
+	Gui::top = top;
 }
-void Graphics::drawRectangle(int x, int y, int w, int h, u8 color1, u8 color2, bool top, bool layer) {
-	u8 *dst = (u8 *)bgGetGfxPtr(top ? layer : layer + 4);
+
+void Gui::Draw_Rect(int x, int y, int w, int h, u8 color) {
+	SCALE_3DS(x);
+	SCALE_3DS(y);
+	SCALE_3DS(w);
+	SCALE_3DS(h);
+
+	u8 *dst = (u8 *)bgGetGfxPtr(top ? bg3Main : bg3Sub);
 	for(int i = 0; i < h; i++) {
-		toncset(dst + ((y + i) * 256 + x), ((i % 2) ? color1 : color2), w);
+		toncset(dst + ((y + i) * 256 + x), color, w);
 	}
 }

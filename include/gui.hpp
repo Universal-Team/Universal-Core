@@ -24,8 +24,8 @@
 *         reasonable ways as different from the original version.
 */
 
-#ifndef _UNIVERSAL_CORE_GRAPHICS_HPP
-#define _UNIVERSAL_CORE_GRAPHICS_HPP
+#ifndef _UNIVERSAL_CORE_GUI_HPP
+#define _UNIVERSAL_CORE_GUI_HPP
 
 #include "font.hpp"
 #include "image.hpp"
@@ -34,9 +34,16 @@
 
 #include <nds/ndstypes.h>
 
-namespace Graphics {
+#ifdef UNIVCORE_3DS_SIZE
+#define SCALE_3DS(Pos) Pos = (Pos * 4 / 5)
+#else
+#define SCALE_3DS(Pos)
+#endif
+
+namespace Gui {
 	extern int bg3Main, bg2Main, bg3Sub, bg2Sub;
-	extern bool wideScreen;
+	extern bool widescreen;
+	extern bool top;
 
 	/**
 	 * @brief Initializes the screens for drawing
@@ -44,21 +51,16 @@ namespace Graphics {
 	void init(void);
 
 	/**
-	 * @brief Clears the given layer
+	 * @brief Clears the given screen
+	 * @param top The screen to clear
 	 */
-	void clear(bool top, int layer);
+	void clear(bool top);
 
 	/**
-	* @brief Draws a rectangle outline of a given size at a given position
-	* @param x The X position
-	* @param y The Y position
-	* @param w The Width
-	* @param h The Height
-	* @param color The index of the color to use
-	* @param top Whether to draw to the top or bottom screen
-	* @param layer The layer to draw to
-	*/
-	void drawOutline(int x, int y, int w, int h, u8 color, bool top, int layer);
+	 * @brief Changes which screen to draw to
+	 * @param top The screen to draw to
+	 */
+	void ScreenDraw(bool top);
 
 	/**
 	* @brief Draws a rectangle of a given size at a given position
@@ -67,23 +69,8 @@ namespace Graphics {
 	* @param w The Width
 	* @param h The Height
 	* @param color The index of the color to use
-	* @param top Whether to draw on the top or bottom screen
-	* @param layer The layer to draw to
 	*/
-	void drawRectangle(int x, int y, int w, int h, u8 color, bool top, bool layer);
-
-	/**
-	* @brief Draws a rectangle of a given size at a given position
-	* @param x The X position
-	* @param y The Y position
-	* @param w The Width
-	* @param h The Height
-	* @param color1 The index of the color to use for even rows
-	* @param color2 The index of the color to use for odd rows
-	* @param top Whether to draw on the top or bottom screen
-	* @param layer The layer to draw to
-	*/
-	void drawRectangle(int x, int y, int w, int h, u8 color1, u8 color2, bool top, bool layer);
+	void Draw_Rect(int x, int y, int w, int h, u8 color);
 }
 
 #endif
