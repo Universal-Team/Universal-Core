@@ -25,17 +25,26 @@
  */
 
 #include "gui.hpp"
-#include "gui.hpp"
 
+#include "font.hpp"
 #include "tonccpy.h"
 
+#include <algorithm>
 #include <nds.h>
 
-int Gui::bg3Main, Gui::bg2Main, Gui::bg3Sub, Gui::bg2Sub;
-bool Gui::widescreen = false;
-bool Gui::top = false;
+#define ANIMATED_SELECTOR_COLOR 0xFF
 
-void Gui::init(void) {
+std::unique_ptr<Font> DefaultFont;
+std::unique_ptr<Screen> usedScreen, tempScreen; // tempScreen used for "fade" effects.
+std::stack<std::unique_ptr<Screen>> screens;
+bool currentScreen = false;
+bool fadeout = false, fadein = false, fadeout2 = false, fadein2 = false;
+int fadealpha = 0;
+int fadecolor = 0;
+bool widescreen = false;
+int selectorTimer = 0;
+
+bool Gui::init(const char *FontPath) {
 	// Initialize video mode
 	videoSetMode(MODE_5_2D);
 	videoSetModeSub(MODE_5_2D);
@@ -48,29 +57,104 @@ void Gui::init(void) {
 	oamInit(&oamMain, SpriteMapping_Bmp_1D_128, false);
 
 	// Init the backgrounds
-	bg3Main = bgInit(3, BgType_Bmp8, BgSize_B8_256x256, 0, 0);
-	bgSetPriority(bg3Main, 3);
+	bgInit(3, BgType_Bmp8, BgSize_B8_256x256, 0, 0);
+	bgSetPriority(3, 3);
 
-	bg2Main = bgInit(2, BgType_Bmp8, BgSize_B8_256x256, 3, 0);
-	bgSetPriority(bg2Main, 2);
+	bgInit(2, BgType_Bmp8, BgSize_B8_256x256, 3, 0);
+	bgSetPriority(2, 2);
 
-	bg3Sub = bgInitSub(3, BgType_Bmp8, BgSize_B8_256x256, 0, 0);
-	bgSetPriority(bg3Sub, 3);
+	bgInitSub(3, BgType_Bmp8, BgSize_B8_256x256, 0, 0);
+	bgSetPriority(7, 3);
 
-	bg2Sub = bgInitSub(2, BgType_Bmp8, BgSize_B8_256x256, 3, 0);
-	bgSetPriority(bg2Sub, 2);
+	bgInitSub(2, BgType_Bmp8, BgSize_B8_256x256, 3, 0);
+	bgSetPriority(6, 2);
 
 	// Set main background as target for sprite transparency
 	REG_BLDCNT     = 1 << 11;
 	REG_BLDCNT_SUB = 1 << 11;
+
+	// Load the default font
+	DefaultFont = std::make_unique<Font>(std::vector<std::string>({"sd:/_nds/Universal-Updater/font.nftr", "fat:/_nds/Universal-Updater/font.nftr", "nitro:/graphics/font/default.nftr"}));
+
+	return true;
 }
 
-void Gui::clear(bool top) {
-	toncset(bgGetGfxPtr(top ? bg3Main : bg3Sub), 0, 256 * 192);
+void Gui::clearScreen(bool top) {
+	toncset(bgGetGfxPtr(currentScreen ? 3 : 7), 0, 256 * 192);
 }
 
-void Gui::ScreenDraw(bool top) {
-	Gui::top = top;
+void Gui::clearTextBufs(void) {
+	DefaultFont->clear();
+}
+
+void Gui::DrawSprite(Image image, size_t imgindex, int x, int y, float ScaleX, float ScaleY) {
+	image.drawSpecial(x, y, ScaleX, ScaleY);
+}
+
+bool Gui::loadFont(Font &fnt, const char *Path) {
+	if(Path && access(Path, F_OK) == 0) // Only load if found.
+		fnt = Font(Path);
+
+	return true;
+}
+
+bool Gui::loadSheet(const char *Path, Image &image) {
+	if(Path && access(Path, F_OK) == 0) // Only load if found.
+		image = Image(Path);
+
+	return true;
+}
+
+/*
+	Reinitialize the GUI.
+
+	fontRegion: The region to use for the system font.
+*/
+bool Gui::reinit(const char *FontPath) {
+	return Gui::init(FontPath);
+}
+
+void Gui::DrawStringCentered(int x, int y, float size, Palette palette, const std::string &Text, int maxWidth, int maxHeight, Font *fnt, int flags) {
+#ifdef UNIVCORE_3DS_SIZE
+	Gui::DrawString(x, y, size, palette, Text, maxWidth, maxHeight, fnt, flags | C2D_AlignCenter);
+#else
+	Gui::DrawString(x, y, size, palette, Text, maxWidth, maxHeight, fnt, flags | C2D_AlignCenter);
+#endif
+}
+
+void Gui::DrawString(int x, int y, float size, Palette palette, const std::string &Text, int maxWidth, int maxHeight, Font *fnt, int flags) {
+	float heightScale = maxHeight == 0 ? size : std::min(size, size * (maxHeight / Gui::GetStringHeight(size, Text, fnt)));
+	float widthScale = maxWidth == 0 ? size : std::min(size, size * (maxWidth / Gui::GetStringWidth(size, Text, fnt)));
+
+	// TODO: Wrapping and such
+	if(fnt)
+		fnt->print(x, y, Text, flags & C2D_AlignCenter ? Alignment::center : (flags & C2D_AlignRight ? Alignment::right : Alignment::left), palette, maxWidth, widthScale, heightScale);
+	else
+		DefaultFont->print(x, y, Text, flags & C2D_AlignCenter ? Alignment::center : (flags & C2D_AlignRight ? Alignment::right : Alignment::left), palette, maxWidth, widthScale, heightScale);
+}
+
+int Gui::GetStringWidth(float size, const std::string &Text, Font *fnt) {
+	if(fnt)
+		return fnt->calcWidth(Text) * size;
+	else
+		return DefaultFont->calcWidth(Text) * size;
+}
+
+int Gui::GetStringHeight(float size, const std::string &Text, Font *fnt) {
+	const int lines = 1 + std::count(Text.begin(), Text.end(), '\n');
+
+	if(fnt)
+		return fnt->height() * lines * size;
+	else
+		return DefaultFont->height() * lines * size;
+}
+
+void Gui::GetStringSize(float size, int *width, int *height, const std::string &Text, Font *fnt) {
+	if(width)
+		*width = GetStringWidth(size, Text, fnt);
+
+	if(height)
+		*height = GetStringHeight(size, Text, fnt);
 }
 
 void Gui::Draw_Rect(int x, int y, int w, int h, u8 color) {
@@ -79,8 +163,179 @@ void Gui::Draw_Rect(int x, int y, int w, int h, u8 color) {
 	SCALE_3DS(w);
 	SCALE_3DS(h);
 
-	u8 *dst = (u8 *)bgGetGfxPtr(top ? bg3Main : bg3Sub);
+	u8 *dst = (u8 *)bgGetGfxPtr(currentScreen ? 3 : 7);
 	for(int i = 0; i < h; i++) {
 		toncset(dst + ((y + i) * 256 + x), color, w);
 	}
+}
+
+void Gui::DrawScreen(bool stack) {
+	if(!stack) {
+		if(usedScreen)
+			usedScreen->Draw();
+
+	} else {
+		if(!screens.empty())
+			screens.top()->Draw();
+	}
+}
+
+void Gui::ScreenLogic(u32 hDown, u32 hHeld, touchPosition touch, bool waitFade, bool stack) {
+	if(waitFade) {
+		if(!fadein && !fadeout && !fadein2 && !fadeout2) {
+			if(!stack) {
+				if(usedScreen)
+					usedScreen->Logic(hDown, hHeld, touch);
+
+			} else {
+				if(!screens.empty())
+					screens.top()->Logic(hDown, hHeld, touch);
+			}
+		}
+
+	} else {
+		if(!stack) {
+			if(usedScreen)
+				usedScreen->Logic(hDown, hHeld, touch);
+
+		} else {
+			if(!screens.empty())
+				screens.top()->Logic(hDown, hHeld, touch);
+		}
+	}
+}
+
+void Gui::transferScreen(bool stack) {
+	if(!stack) {
+		if(tempScreen)
+			usedScreen = std::move(tempScreen);
+
+	} else {
+		if(tempScreen)
+			screens.push(std::move(tempScreen));
+	}
+}
+
+void Gui::setScreen(std::unique_ptr<Screen> screen, bool fade, bool stack) {
+	tempScreen = std::move(screen);
+
+	/* Switch screen without fade. */
+	if(!fade) {
+		Gui::transferScreen(stack);
+
+	} else {
+		/* Fade, then switch. */
+		fadeout = true;
+	}
+}
+
+void Gui::fadeEffects(int fadeoutFrames, int fadeinFrames, bool stack) {
+	// TODO!
+	if(fadein) {
+		fadealpha -= fadeinFrames;
+
+		if(fadealpha < 0) {
+			fadealpha = 0;
+			fadecolor = 255;
+			fadein = false;
+		}
+	}
+
+	if(stack) {
+		if(fadein2) {
+			fadealpha -= fadeinFrames;
+
+			if(fadealpha < 0) {
+				fadealpha = 0;
+				fadecolor = 255;
+				fadein2 = false;
+			}
+		}
+	}
+
+	if(fadeout) {
+		fadealpha += fadeoutFrames;
+
+		if(fadealpha > 255) {
+			fadealpha = 255;
+			Gui::transferScreen(stack); // Transfer Temp screen to the stack / used one.
+			fadein = true;
+			fadeout = false;
+		}
+	}
+
+	if(stack) {
+		if(fadeout2) {
+			fadealpha += fadeoutFrames;
+
+			if(fadealpha > 255) {
+				fadealpha = 255;
+				Gui::screenBack2(); // Go screen back.
+				fadein2 = true;
+				fadeout2 = false;
+			}
+		}
+	}
+}
+
+void Gui::screenBack(bool fade) {
+	if(!fade) {
+		if(screens.size() > 0)
+			screens.pop();
+
+	} else {
+		if(screens.size() > 0)
+			fadeout2 = true;
+	}
+}
+
+void Gui::screenBack2() {
+	if(screens.size() > 0)
+		screens.pop();
+}
+
+void Gui::ScreenDraw(bool top) {
+	currentScreen = top;
+}
+
+void Gui::drawGrid(int xPos, int yPos, int Width, int Height, u8 color, u8 bgColor) {
+	constexpr int w = 1;
+
+	/* BG Color for the Grid. (Transparent by default.) */
+	Gui::Draw_Rect(xPos, yPos, Width, Height, bgColor);
+
+	/* Grid part, Top. */
+	Gui::Draw_Rect(xPos, yPos, Width, w, color);
+	/* Left. */
+	Gui::Draw_Rect(xPos, yPos + w, w, Height - 2 * w, color);
+	/* Right. */
+	Gui::Draw_Rect(xPos + Width - w, yPos + w, w, Height - 2 * w, color);
+	/* Bottom. */
+	Gui::Draw_Rect(xPos, yPos + Height - w, Width, w, color);
+}
+
+void Gui::drawAnimatedSelector(int xPos, int yPos, int Width, int Height, int speed, u16 SelectorColor, u8 bgColor) {
+	constexpr int w = 2;
+	int highlight_multiplier = (selectorTimer % 0x3F > 0x1F) ? selectorTimer % 0x1F : 0x1F - (selectorTimer % 0x1F);
+	u8 r                     = SelectorColor & 0x1F;
+	u8 g                     = (SelectorColor >> 5) & 0x1F;
+	u8 b                     = (SelectorColor >> 10) & 0x1F;
+	u16 color                = (r / highlight_multiplier) | (g / highlight_multiplier) << 5 | (b / highlight_multiplier) << 10 | BIT(15);
+
+	BG_PALETTE[ANIMATED_SELECTOR_COLOR] = color;
+	BG_PALETTE_SUB[ANIMATED_SELECTOR_COLOR] = color;
+
+	/* BG Color for the Selector. */
+	Gui::Draw_Rect(xPos, yPos, Width, Height, bgColor);
+
+	/* Selector part, Top. */
+	Gui::Draw_Rect(xPos, yPos, Width, w, ANIMATED_SELECTOR_COLOR);
+	/* Left. */
+	Gui::Draw_Rect(xPos, yPos + w, w, Height - 2 * w, ANIMATED_SELECTOR_COLOR);
+	/* Right. */
+	Gui::Draw_Rect(xPos + Width - w, yPos + w, w, Height - 2 * w, ANIMATED_SELECTOR_COLOR);
+	/* Bottom. */
+	Gui::Draw_Rect(xPos, yPos + Height - w, Width, w, ANIMATED_SELECTOR_COLOR);
+
+	selectorTimer += speed;
 }

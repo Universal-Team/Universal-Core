@@ -26,7 +26,7 @@
 
 #include "font.hpp"
 
-#include "gui.hpp"
+#include "screenCommon.hpp"
 #include "tonccpy.h"
 
 #ifdef UNIVCORE_TEXT_BUFFERED
@@ -34,6 +34,7 @@ u8 Font::textBuf[2][256 * 192];
 #endif
 
 Font::Font(const std::vector<std::string> &paths) {
+
 	FILE *file = nullptr;
 	for(const auto &path : paths) {
 		file = fopen(path.c_str(), "rb");
@@ -183,7 +184,7 @@ int Font::calcWidth(std::u16string_view text) {
 	return x;
 }
 
-ITCM_CODE void Font::DrawString(std::u16string_view text, int x, int y, Alignment align, Palette palette,
+ITCM_CODE void Font::print(std::u16string_view text, int x, int y, Alignment align, Palette palette,
 						   int maxWidth, float scaleX, float scaleY, bool rtl, Sprite *sprite) {
 	// If RTL isn't forced, check for RTL text
 	for(const auto c : text) {
@@ -202,7 +203,7 @@ ITCM_CODE void Font::DrawString(std::u16string_view text, int x, int y, Alignmen
 		case Alignment::center: {
 			size_t newline = text.find('\n');
 			while(newline != text.npos) {
-				DrawString(text.substr(0, newline), x, y, align, palette, maxWidth, scaleX, scaleY, rtl, sprite);
+				print(text.substr(0, newline), x, y, align, palette, maxWidth, scaleX, scaleY, rtl, sprite);
 				text    = text.substr(newline + 1);
 				newline = text.find('\n');
 				y += tileHeight;
@@ -214,7 +215,7 @@ ITCM_CODE void Font::DrawString(std::u16string_view text, int x, int y, Alignmen
 		case Alignment::right: {
 			size_t newline = text.find('\n');
 			while(newline != text.npos) {
-				DrawString(text.substr(0, newline), x - (calcWidth(text.substr(0, newline)) * scaleX), y,
+				print(text.substr(0, newline), x - (calcWidth(text.substr(0, newline)) * scaleX), y,
 					  Alignment::left, palette, maxWidth, scaleX, scaleY, rtl, sprite);
 				text    = text.substr(newline + 1);
 				newline = text.find('\n');
@@ -350,7 +351,7 @@ ITCM_CODE void Font::DrawString(std::u16string_view text, int x, int y, Alignmen
 			// Don't draw off screen chars
 			if(x >= 0 && x + fontWidths[(index * 3) + 2] < 256 && y >= 0 && y + tileHeight < 192) {
 #ifdef UNIVCORE_TEXT_BUFFERED
-				u8 *dst = textBuf[Gui::top] + y * 256 + x + fontWidths[(index * 3)];
+				u8 *dst = textBuf[currentScreen] + y * 256 + x + fontWidths[(index * 3)];
 #else
 				u8 *dst = (u8 *)bgGetGfxPtr(Gui::top ? 2 : 6) + y * 256 + x + fontWidths[(index * 3)];
 #endif

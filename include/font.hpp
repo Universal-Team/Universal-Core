@@ -69,7 +69,7 @@ private:
 
 	u16 charIndex(char16_t c);
 
-	void DrawString(std::u16string_view text, int x, int y, Alignment align, Palette palette, int maxWidth, float scaleX, float scaleY, bool rtl, Sprite *sprite);
+	void print(std::u16string_view text, int x, int y, Alignment align, Palette palette, int maxWidth, float scaleX, float scaleY, bool rtl, Sprite *sprite);
 
 public:
 	/**
@@ -118,7 +118,7 @@ public:
 	 * @param scaleX (Optional) The scale on the X axis
 	 * @param scaleY (Optional) The scale on the Y axis
 	 */
-	void DrawString(int x, int y, int value, Alignment align = Alignment::left, Palette palette = Palette::UNIVCORE_TEXT_DEFAULT_PALETTE, int maxWidth = 0, float scaleX = 1.0f, float scaleY = 1.0f) { DrawString(utf8to16(std::to_string(value)), x, y, align, palette, maxWidth, scaleX, scaleY, false, nullptr); }
+	void print(int x, int y, int value, Alignment align = Alignment::left, Palette palette = Palette::UNIVCORE_TEXT_DEFAULT_PALETTE, int maxWidth = 0, float scaleX = 1.0f, float scaleY = 1.0f) { print(utf8to16(std::to_string(value)), x, y, align, palette, maxWidth, scaleX, scaleY, false, nullptr); }
 
 	/**
 	 * @brief Prints a string to a background layer
@@ -131,8 +131,8 @@ public:
 	 * @param scaleX (Optional) The scale on the X axis
 	 * @param scaleY (Optional) The scale on the Y axis
 	 */
-	void DrawString(int x, int y, std::string_view text, Alignment align = Alignment::left, Palette palette = Palette::UNIVCORE_TEXT_DEFAULT_PALETTE, int maxWidth = 0, float scaleX = 1.0f, float scaleY = 1.0f) { DrawString(utf8to16(text), x, y, align, palette, maxWidth, scaleX, scaleY, false, nullptr); }
-	void DrawString(int x, int y, std::u16string_view text, Alignment align = Alignment::left, Palette palette = Palette::UNIVCORE_TEXT_DEFAULT_PALETTE, int maxWidth = 0, float scaleX = 1.0f, float scaleY = 1.0f) { DrawString(text, x, y, align, palette, maxWidth, scaleX, scaleY, false, nullptr); }
+	void print(int x, int y, std::string_view text, Alignment align = Alignment::left, Palette palette = Palette::UNIVCORE_TEXT_DEFAULT_PALETTE, int maxWidth = 0, float scaleX = 1.0f, float scaleY = 1.0f) { print(utf8to16(text), x, y, align, palette, maxWidth, scaleX, scaleY, false, nullptr); }
+	void print(int x, int y, std::u16string_view text, Alignment align = Alignment::left, Palette palette = Palette::UNIVCORE_TEXT_DEFAULT_PALETTE, int maxWidth = 0, float scaleX = 1.0f, float scaleY = 1.0f) { print(text, x, y, align, palette, maxWidth, scaleX, scaleY, false, nullptr); }
 
 	/**
 	 * @brief Prints an integer value to a sprite
@@ -146,7 +146,7 @@ public:
 	 * @param scaleX (Optional) The scale on the X axis
 	 * @param scaleY (Optional) The scale on the Y axis
 	 */
-	void DrawString(int x, int y, int value, Sprite &sprite, Alignment align = Alignment::left, Palette palette = Palette::UNIVCORE_TEXT_DEFAULT_PALETTE, int maxWidth = 0, float scaleX = 1.0f, float scaleY = 1.0f) { DrawString(utf8to16(std::to_string(value)), x, y, align, palette, maxWidth, scaleX, scaleY, false, nullptr); }
+	void print(int x, int y, int value, Sprite &sprite, Alignment align = Alignment::left, Palette palette = Palette::UNIVCORE_TEXT_DEFAULT_PALETTE, int maxWidth = 0, float scaleX = 1.0f, float scaleY = 1.0f) { print(utf8to16(std::to_string(value)), x, y, align, palette, maxWidth, scaleX, scaleY, false, nullptr); }
 
 	/**
 	 * @brief Prints a string to a sprite
@@ -160,8 +160,8 @@ public:
 	 * @param scaleX (Optional) The scale on the X axis
 	 * @param scaleY (Optional) The scale on the Y axis
 	 */
-	void DrawString(int x, int y, std::string_view text, Sprite &sprite, Alignment align = Alignment::left, Palette palette = Palette::UNIVCORE_TEXT_DEFAULT_PALETTE, int maxWidth = 0, float scaleX = 1.0f, float scaleY = 1.0f) { DrawString(utf8to16(text), x, y, align, palette, maxWidth, scaleX, scaleY, false, &sprite); }
-	void DrawString(int x, int y, std::u16string_view text, Sprite &sprite, Alignment align = Alignment::left, Palette palette = Palette::UNIVCORE_TEXT_DEFAULT_PALETTE, int maxWidth = 0, float scaleX = 1.0f, float scaleY = 1.0f) { DrawString(text, x, y, align, palette, maxWidth, scaleX, scaleY, false, &sprite); }
+	void print(int x, int y, std::string_view text, Sprite &sprite, Alignment align = Alignment::left, Palette palette = Palette::UNIVCORE_TEXT_DEFAULT_PALETTE, int maxWidth = 0, float scaleX = 1.0f, float scaleY = 1.0f) { print(utf8to16(text), x, y, align, palette, maxWidth, scaleX, scaleY, false, &sprite); }
+	void print(int x, int y, std::u16string_view text, Sprite &sprite, Alignment align = Alignment::left, Palette palette = Palette::UNIVCORE_TEXT_DEFAULT_PALETTE, int maxWidth = 0, float scaleX = 1.0f, float scaleY = 1.0f) { print(text, x, y, align, palette, maxWidth, scaleX, scaleY, false, &sprite); }
 
 #ifdef UNIVCORE_TEXT_BUFFERED
 	/**

@@ -26,7 +26,7 @@
 
 #include "image.hpp"
 
-#include "gui.hpp"
+#include "screenCommon.hpp"
 
 #include "tonccpy.h"
 
@@ -91,9 +91,9 @@ void Image::draw(int x, int y, bool copyPal) {
 	SCALE_3DS(y);
 
 	if(copyPal)
-		tonccpy((Gui::top ? BG_PALETTE : BG_PALETTE_SUB) + _palOfs, _palette.data(), _palette.size() * 2);
+		tonccpy((currentScreen ? BG_PALETTE : BG_PALETTE_SUB) + _palOfs, _palette.data(), _palette.size() * 2);
 
-	u8 *dst = (u8 *)bgGetGfxPtr(Gui::top ? 3 : 7) + y * 256 + x;
+	u8 *dst = (u8 *)bgGetGfxPtr(currentScreen ? 3 : 7) + y * 256 + x;
 
 	// If full width and X is 0, copy it all in one go
 	if(_width == 256 && x == 0) {
@@ -111,16 +111,13 @@ void Image::drawSpecial(int x, int y, float scaleX, float scaleY, int paletteOff
 	SCALE_3DS(y);
 
 	if(copyPal)
-		tonccpy((Gui::top ? BG_PALETTE : BG_PALETTE_SUB) + _palOfs + paletteOffset, _palette.data(), _palette.size() * 2);
+		tonccpy((currentScreen ? BG_PALETTE : BG_PALETTE_SUB) + _palOfs + paletteOffset, _palette.data(), _palette.size() * 2);
 
-	u8 *dst = (u8 *)bgGetGfxPtr(Gui::top ? 3 : 7) + y * 256 + x;
+	u8 *dst = (u8 *)bgGetGfxPtr(currentScreen ? 3 : 7) + y * 256 + x;
 
 	// If the scale is 1 use faster integer math
-	nocashMessage("a");
 	if(scaleX == 1.0f && scaleY == 1.0f) {
-		nocashMessage("b");
 		for(int i = 0; i < _height; i++) {
-		nocashMessage("d");
 			for(int j = 0; j < _width; j++) {
 				u8 px = _bitmap[i * _width + j];
 				if(_palette[px - _palOfs] & 0x8000)
@@ -128,7 +125,6 @@ void Image::drawSpecial(int x, int y, float scaleX, float scaleY, int paletteOff
 			}
 		}
 	} else {
-		nocashMessage("c");
 		for(int i = 0; i < _height * scaleY; i++) {
 			for(int j = 0; j < _width * scaleX; j++) {
 				u8 px = _bitmap[int(i / scaleY) * _width + int(j / scaleX)];
@@ -144,10 +140,10 @@ void Image::drawSegment(int x, int y, int imageX, int imageY, int w, int h, bool
 	SCALE_3DS(y);
 
 	if(copyPal)
-		tonccpy((Gui::top ? BG_PALETTE : BG_PALETTE_SUB) + _palOfs, _palette.data(), _palette.size() * 2);
+		tonccpy((currentScreen ? BG_PALETTE : BG_PALETTE_SUB) + _palOfs, _palette.data(), _palette.size() * 2);
 
 	for(int i = 0; i < h; i++) {
-		tonccpy((u8 *)bgGetGfxPtr(Gui::top ? 3 : 7) + (y + i) * 256 + x,
+		tonccpy((u8 *)bgGetGfxPtr(currentScreen ? 3 : 7) + (y + i) * 256 + x,
 				_bitmap.data() + (imageY + i) * _width + imageX, w);
 	}
 }
@@ -158,9 +154,9 @@ void Image::drawSegmentSpecial(int x, int y, int imageX, int imageY, int w, int 
 	SCALE_3DS(y);
 
 	if(copyPal)
-		tonccpy((Gui::top ? BG_PALETTE : BG_PALETTE_SUB) + _palOfs + paletteOffset, _palette.data(), _palette.size() * 2);
+		tonccpy((currentScreen ? BG_PALETTE : BG_PALETTE_SUB) + _palOfs + paletteOffset, _palette.data(), _palette.size() * 2);
 
-	u8 *dst = (u8 *)bgGetGfxPtr(Gui::top ? 3 : 7) + y * 256 + x;
+	u8 *dst = (u8 *)bgGetGfxPtr(currentScreen ? 3 : 7) + y * 256 + x;
 
 	// If the scale is 1 use faster integer math
 	if(scaleX == 1.0f && scaleY == 1.0f) {
