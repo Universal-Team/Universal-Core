@@ -69,8 +69,8 @@ public:
 	u16 width(void) const { return _width; }
 	u16 height(void) const { return _height; }
 	u8 paletteStart(void) const { return _paletteStart; }
-	std::vector<u8> bitmap(void) const { return _bitmap; }
-	std::vector<u16> palette(void) const { return _palette; }
+	const std::vector<u8> &bitmap(void) const { return _bitmap; }
+	const std::vector<u16> &palette(void) const { return _palette; }
 
 	void changePaletteStart(u8 paletteStart);
 
