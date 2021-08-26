@@ -111,6 +111,10 @@ void Image::load(const u8 *grf, u8 paletteStart) {
 			} case 0x204C4150: { // 'PAL '
 				_palette = std::vector<u16>((ptr[2] >> 8) / 2);
 				decompressGrf(_palette.data(), ptr + 2);
+				for(u16 &px : _palette) {
+					if(px != 0x7C1F)
+						px |= BIT(15);
+				}
 				break;
 			} default: {
 				// Not supported yet
@@ -152,7 +156,7 @@ void Image::draw(int x, int y, float scaleX, float scaleY, bool skipAlpha) {
 				u8 *src = _bitmap.data() + i * _width;
 				u8 *dst = (u8 *)bgGetGfxPtr(currentScreen ? 3 : 7) + (y + i) * 256 + x;
 				for(u32 j = 0; j < _width; j++) {
-					if(_palette[src[j] - _paletteStart] != 0x7C1F)
+					if(_palette[src[j] - _paletteStart] & 0x8000)
 						toncset(dst + j, src[j], 1);
 				}
 			}
@@ -167,7 +171,7 @@ void Image::draw(int x, int y, float scaleX, float scaleY, bool skipAlpha) {
 			u8 *dst = (u8 *)bgGetGfxPtr(currentScreen ? 3 : 7) + (y + i) * 256 + x;
 			for(u32 j = 0; j < _width * scaleX; j++) {
 				u8 px = _bitmap[int(i / scaleY) * _width + int(j / scaleX)];
-				if(_palette[px - _paletteStart] != 0x7C1F || !skipAlpha)
+				if(_palette[px - _paletteStart] & 0x8000 || !skipAlpha)
 					toncset(dst + j, px, 1);
 			}
 		}
@@ -185,7 +189,7 @@ void Image::drawSegment(int x, int y, int imageX, int imageY, int w, int h, floa
 				u8 *src = _bitmap.data() + i * _width;
 				u8 *dst = (u8 *)bgGetGfxPtr(currentScreen ? 3 : 7) + (y + i) * 256 + x;
 				for(int j = 0; j < w; j++) {
-					if(_palette[src[j] - _paletteStart] != 0x7C1F)
+					if(_palette[src[j] - _paletteStart] & 0x8000)
 						toncset(dst + j, src[j], 1);
 				}
 			}
@@ -200,7 +204,7 @@ void Image::drawSegment(int x, int y, int imageX, int imageY, int w, int h, floa
 			u8 *dst = (u8 *)bgGetGfxPtr(currentScreen ? 3 : 7) + (y + i) * 256 + x;
 			for(u32 j = 0; j < w * scaleX; j++) {
 				u8 px = _bitmap[(imageY + int(i / scaleY)) * _width + imageX + int(j / scaleX)];
-				if(_palette[px - _paletteStart] != 0x7C1F || !skipAlpha)
+				if(_palette[px - _paletteStart] & 0x8000 || !skipAlpha)
 					toncset(dst + j, px, 1);
 			}
 		}

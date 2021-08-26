@@ -81,7 +81,7 @@ public:
 	 * @param x The X position
 	 * @param y The Y position
 	 */
-	void position(int x, int y) { _x = x, _y = y; if(_visibility) oamSetXY(_oam, _id, _x, _y); }
+	void position(int x, int y);
 
 	/**
 	 * @brief Sets the priority of the sprite

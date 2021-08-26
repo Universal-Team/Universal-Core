@@ -26,6 +26,7 @@
 
 #include "sprite.hpp"
 
+#include "gui.hpp"
 #include "tonccpy.h"
 
 u8 Sprite::_assigned[2][128] = {{false}, {false}};
@@ -34,6 +35,9 @@ Sprite::Sprite(bool top, SpriteSize size, SpriteColorFormat format, int x, int y
 			   int paletteAlpha, int rotationIndex, bool doubleSize, bool visible, bool vFlip, bool hFlip, bool mosaic)
 	: _top(top), _oam(top ? &oamMain : &oamSub), _size(size), _format(format), _x(x), _y(y), _priority(priority),
 	  _id(id), _rotationIndex(rotationIndex), _paletteAlpha(paletteAlpha), _visibility(visible) {
+	SCALE_3DS(_x);
+	SCALE_3DS(_y);
+
 	// If the ID is -1, set it to the first free one
 	if(_id == -1) {
 		for(uint i = 0; i < sizeof(_assigned[_top]) / sizeof(_assigned[_top][0]); i++) {
@@ -137,6 +141,17 @@ Sprite::~Sprite(void) {
 		oamClearSprite(_oam, _id);
 		oamUpdate(_oam);
 	}
+}
+
+void Sprite::position(int x, int y) {
+	SCALE_3DS(x);
+	SCALE_3DS(y);
+
+	_x = x;
+	_y = y;
+	
+	if(_visibility)
+		oamSetXY(_oam, _id, _x, _y);
 }
 
 void Sprite::rotation(int rotation) {

@@ -54,7 +54,6 @@ Spritesheet::Spritesheet(const std::vector<std::string> &paths, const std::vecto
 	_images.resize(imageCount);
 	
 	for(u32 i = 0; i < imageCount; i++) {
-		nocashMessage(std::to_string(std::find(indexes.begin(), indexes.end(), i) - indexes.begin()).c_str());
 		if(indexes.size() == 0 || std::find(indexes.begin(), indexes.end(), i) != indexes.end()) {
 			fseek(file, 0x10 + i * 8, SEEK_SET);
 
