@@ -60,8 +60,8 @@ private:
 	static u8 textBuf[2][256 * 192];
 #endif
 
-	u8 tileWidth, tileHeight;
-	u16 tileSize;
+	u8 tileWidth = 0, tileHeight = 0;
+	u16 tileSize = 0;
 	u16 questionMark = 0;
 	std::vector<u8> fontTiles;
 	std::vector<u8> fontWidths;

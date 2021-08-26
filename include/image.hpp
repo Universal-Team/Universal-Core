@@ -33,46 +33,52 @@
 
 class Image {
 private:
-	u16 _width;
-	u16 _height;
-	std::vector<u8> _bitmap;
-	std::vector<u16> _palette;
-	u16 _palOfs;
+	u32 _width = 0;
+	u32 _height = 0;
+	u8 _paletteStart = 0;
+	std::vector<u8> _bitmap = {};
+	std::vector<u16> _palette = {};
+
+	static void decompressGrf(void *dst, const void *src);
+
+	void load(const u8 *grf, u8 paletteStart);
 
 public:
 	/**
-	 * Image drawing class
+	 * @brief Image drawing class
 	 * @param paths The paths to try load the image from, from highest to lowest priority
+	 * @param paletteStart Where to start the palette in VRAM
 	 */
-	Image(const std::vector<std::string> &paths);
+	Image(const std::vector<std::string> &paths, u8 paletteStart);
 	/**
-	 * @brief Text printing class
+	 * @brief Image drawing class
 	 * @param path The path to load the image from
+	 * @param paletteStart Where to start the palette in VRAM
 	 */
-	Image(const std::string &path) : Image(std::vector<std::string>({path})) {};
+	Image(const std::string &path, u8 paletteStart) : Image(std::vector<std::string>({path}), paletteStart) {};
 
 	/**
 	 * @brief Image drawing class
-	 * @param file The file to load the image from, seeked to the '.GFX' magic
+	 * @param grf Pointer to a GRF in memory
+	 * @param paletteStart Where to start the palette in VRAM
 	 */
-	Image(FILE *file);
+	Image(const u8 *grf, u8 paletteStart);
 
-	Image() {};
 	~Image(void) {};
 
 	u16 width(void) const { return _width; }
 	u16 height(void) const { return _height; }
+	u8 paletteStart(void) const { return _paletteStart; }
 	std::vector<u8> bitmap(void) const { return _bitmap; }
 	std::vector<u16> palette(void) const { return _palette; }
-	u16 palOfs(void) const { return _palOfs; }
+
+	void changePaletteStart(u8 paletteStart);
 
 	/**
-	 * @brief Draws the image to a background layer, faster but without alpha, scaling, or palette offsetting
-	 * @param x The X position to draw at
-	 * @param y The Y position to draw at
-	 * @param copyPal (Optional) Whether to copy the image's palette into palette VRAM
+	 * @brief Copies the palette into VRAM
+	 * @param paletteStart Where to start the palette in VRAM
 	 */
-	void draw(int x, int y, bool copyPal = true);
+	void copyPalette(int paletteStart);
 
 	/**
 	 * @brief Draws the image to a background layer, slower but can skip alpha, scale, and offset the palette
@@ -80,22 +86,9 @@ public:
 	 * @param y The Y position to draw at
 	 * @param scaleX (Optional) The scale for the X axis
 	 * @param scaleY (Optional) The scale for the Y axis
-	 * @param paletteOffset (Optional) How much to offset the palette by
-	 * @param copyPal (Optional) Whether to copy the image's palette into palette VRAM
+	 * @param skipAlpha (Optional) Whether to skip transparent pixels, draws faster when disabled at 1.0 scale
 	 */
-	void drawSpecial(int x, int y, float scaleX = 1.0f, float scaleY = 1.0f, int paletteOffset = 0, bool copyPal = true);
-
-	/**
-	 * @brief Draws a segment of an image to a background layer, faster but overwrites alpha and no scaling or palette offsetting
-	 * @param x The X position to draw at
-	 * @param y The Y position to draw at
-	 * @param imageX The X position in the image to draw from
-	 * @param imageY The Y position in the image to draw from
-	 * @param w The width to draw
-	 * @param h The height to draw
-	 * @param copyPal (Optional) Whether to copy the image's palette into palette VRAM
-	 */
-	void drawSegment(int x, int y, int imageX, int imageY, int w, int h, bool copyPal = true);
+	void draw(int x, int y, float scaleX = 1.0f, float scaleY = 1.0f, bool skipAlpha = true);
 
 	/**
 	 * @brief Draws a segment of an image to a background layer, slower but can skip alpha, scale, and offset the palette
@@ -107,10 +100,9 @@ public:
 	 * @param h The height to draw
 	 * @param scaleX (Optional) The scale for the X axis
 	 * @param scaleY (Optional) The scale for the Y axis
-	 * @param paletteOffset (Optional) How much to offset the palette by
-	 * @param copyPal (Optional) Whether to copy the image's palette into palette VRAM
+	 * @param skipAlpha (Optional) Whether to skip transparent pixels, draws faster when disabled at 1.0 scale
 	 */
-	void drawSegmentSpecial(int x, int y, int imageX, int imageY, int w, int h, float scaleX = 1.0f, float scaleY = 1.0f, int paletteOffset = 0, bool copyPal = true);
+	void drawSegment(int x, int y, int imageX, int imageY, int w, int h, float scaleX = 1.0f, float scaleY = 1.0f, bool skipAlpha = true);
 
 };
 

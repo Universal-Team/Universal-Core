@@ -194,7 +194,7 @@ void Sprite::drawImage(int x, int y, const Image &image, float scaleX, float sca
 	if(scaleX == 1.0f && scaleY == 1.0f) {
 		for(int i = 0; i < image.height(); i++) {
 			for(int j = 0; j < image.width(); j++) {
-				u16 px = image.palette()[image.bitmap()[i * image.width() + j] - image.palOfs()];
+				u16 px = image.palette()[image.bitmap()[i * image.width() + j] - image.paletteStart()];
 				if(px & 0x8000)
 					_gfx[(y + i) * _height + x + j] = px;
 			}
@@ -203,7 +203,7 @@ void Sprite::drawImage(int x, int y, const Image &image, float scaleX, float sca
 		for(int i = 0; i < image.height() * scaleY; i++) {
 			for(int j = 0; j < image.width() * scaleX; j++) {
 				u16 px =
-					image.palette()[image.bitmap()[int(i / scaleY) * image.width() + int(j / scaleX)] - image.palOfs()];
+					image.palette()[image.bitmap()[int(i / scaleY) * image.width() + int(j / scaleX)] - image.paletteStart()];
 				if(px & 0x8000)
 					_gfx[(y + i) * _height + j + x] = px;
 			}
@@ -217,7 +217,7 @@ void Sprite::drawImageSegment(int x, int y, int imageX, int imageY, int w, int h
 	if(scaleX == 1.0f && scaleY == 1.0f) {
 		for(int i = 0; i < h; i++) {
 			for(int j = 0; j < w; j++) {
-				u16 px = image.palette()[image.bitmap()[(imageY + i) * image.width() + imageX + j] - image.palOfs()];
+				u16 px = image.palette()[image.bitmap()[(imageY + i) * image.width() + imageX + j] - image.paletteStart()];
 				if(px & 0x8000)
 					_gfx[(y + i) * _height + x + j] = px;
 			}
@@ -227,7 +227,7 @@ void Sprite::drawImageSegment(int x, int y, int imageX, int imageY, int w, int h
 			for(int j = 0; j < w * scaleX; j++) {
 				u16 px = image.palette()[image.bitmap()[(imageY + int(i / scaleY)) * image.width() + imageX +
 														int(j / scaleX)] -
-										 image.palOfs()];
+										 image.paletteStart()];
 				if(px & 0x8000)
 					_gfx[(y + i) * _height + x + j] = px;
 			}

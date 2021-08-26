@@ -87,8 +87,8 @@ void Gui::clearTextBufs(void) {
 	DefaultFont->clear();
 }
 
-void Gui::DrawSprite(Image image, size_t imgindex, int x, int y, float ScaleX, float ScaleY) {
-	image.drawSpecial(x, y, ScaleX, ScaleY);
+void Gui::DrawSprite(Spritesheet &sheet, size_t imgindex, int x, int y, float ScaleX, float ScaleY) {
+	sheet[imgindex].draw(x, y, 0x20, ScaleX, ScaleY);
 }
 
 bool Gui::loadFont(Font &fnt, const char *Path) {
@@ -98,18 +98,13 @@ bool Gui::loadFont(Font &fnt, const char *Path) {
 	return true;
 }
 
-bool Gui::loadSheet(const char *Path, Image &image) {
+bool Gui::loadSheet(const char *Path, Spritesheet &sheet) {
 	if(Path && access(Path, F_OK) == 0) // Only load if found.
-		image = Image(Path);
+		sheet = Spritesheet(Path);
 
 	return true;
 }
 
-/*
-	Reinitialize the GUI.
-
-	fontRegion: The region to use for the system font.
-*/
 bool Gui::reinit(const char *FontPath) {
 	return Gui::init(FontPath);
 }

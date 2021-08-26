@@ -27,10 +27,37 @@
 #include "image.hpp"
 
 #include "screenCommon.hpp"
-
 #include "tonccpy.h"
 
-Image::Image(const std::vector<std::string> &paths) {
+#include <nds/bios.h>
+
+void Image::decompressGrf(void *dst, const void *src) {
+	if(!src || !dst)
+		return;
+
+	u32 header = *(u32*)src;
+	u32 size = header >> 8;
+	
+	switch(header & 0xF0) {
+		case 0x00: // No compression
+			tonccpy(dst, (u8*)src + 4, size);
+			break;
+		case 0x10: // LZ77
+			decompress(src, dst, LZ77);
+			break;
+		case 0x20: // Huffman
+			decompress(src, dst, HUFF);
+			break;
+		case 0x30: // RLE
+			decompress(src, dst, RLE);
+			break;
+		default:
+			break;
+	}
+}
+
+
+Image::Image(const std::vector<std::string> &paths, u8 paletteStart) {
 	// Attempt to load from the given paths
 	FILE *file = nullptr;
 	for(const auto &path : paths) {
@@ -43,136 +70,138 @@ Image::Image(const std::vector<std::string> &paths) {
 	if(!file)
 		return;
 
-	// Return if not in the correct format
-	char magic[5] = {0};
-	fread(magic, 1, 4, file);
-	if(strcmp(magic, ".GFX"))
-		return;
+	fseek(file, 0, SEEK_END);
+	long size = ftell(file);
+	fseek(file, 0, SEEK_SET);
 
-	// Read image
-	fread(&_width, 1, 2, file);
-	fread(&_height, 1, 2, file);
-	_bitmap = std::vector<u8>(_width * _height);
-	fread(_bitmap.data(), 1, _bitmap.size(), file);
-	u16 palCount;
-	fread(&palCount, 1, 2, file);
-	fread(&_palOfs, 1, 2, file);
-	_palette = std::vector<u16>(palCount);
-	fread(_palette.data(), 2, palCount, file);
-	fclose(file);
-}
+	u8 *grf = new u8[size];
+	if(grf) {
+		fread(grf, 1, size, file);
 
-Image::Image(FILE *file) {
-	// Return if no file
-	if(!file)
-		return;
+		load(grf, paletteStart);
 
-	// Return if not in the correct format
-	char magic[5];
-	fread(magic, 1, 4, file);
-	if(strcmp(magic, ".GFX"))
-		return;
-
-	// Read image
-	fread(&_width, 1, 2, file);
-	fread(&_height, 1, 2, file);
-	_bitmap = std::vector<u8>(_width * _height);
-	fread(_bitmap.data(), 1, _bitmap.size(), file);
-	u16 palCount;
-	fread(&palCount, 1, 2, file);
-	fread(&_palOfs, 1, 2, file);
-	_palette = std::vector<u16>(palCount);
-	fread(_palette.data(), 2, palCount, file);
-	fclose(file);
-}
-
-void Image::draw(int x, int y, bool copyPal) {
-	SCALE_3DS(x);
-	SCALE_3DS(y);
-
-	if(copyPal)
-		tonccpy((currentScreen ? BG_PALETTE : BG_PALETTE_SUB) + _palOfs, _palette.data(), _palette.size() * 2);
-
-	u8 *dst = (u8 *)bgGetGfxPtr(currentScreen ? 3 : 7) + y * 256 + x;
-
-	// If full width and X is 0, copy it all in one go
-	if(_width == 256 && x == 0) {
-		tonccpy(dst, _bitmap.data(), _width * _height);
-	} else {
-		for(int i = 0; i < _height; i++) {
-			tonccpy(dst + i * 256, _bitmap.data() + i * _width, _width);
-		}
+		delete[] grf;
 	}
 }
 
-void Image::drawSpecial(int x, int y, float scaleX, float scaleY, int paletteOffset,
-						bool copyPal) {
+Image::Image(const u8 *grf, u8 paletteStart) {
+	load(grf, paletteStart);
+}
+
+void Image::load(const u8 *grf, u8 paletteStart) {
+	const u32 *ptr = (u32 *)grf;
+	if(!ptr || ptr[0] != 0x46464952 || ptr[2] != 0x20465247) {
+		return;
+	}
+	
+	u32 size = ptr[1]; // RIFF size
+	ptr += 3; // Skip to first section
+
+	while((u8 *)ptr < grf + size) {
+		switch(*ptr) {
+			case 0x20524448: { // 'HDR '
+				memcpy(&_width, ptr + 4, 4);
+				memcpy(&_height, ptr + 5, 4);
+				break;
+			} case 0x20584647: { // 'GFX '
+				_bitmap = std::vector<u8>(ptr[2] >> 8);
+				decompressGrf(_bitmap.data(), ptr + 2);
+				changePaletteStart(paletteStart);
+				break;
+			} case 0x204C4150: { // 'PAL '
+				_palette = std::vector<u16>((ptr[2] >> 8) / 2);
+				decompressGrf(_palette.data(), ptr + 2);
+				break;
+			} default: {
+				// Not supported yet
+				break;
+			}
+		}
+
+		ptr += 2 + ptr[1] / 4;
+	}
+}
+
+void Image::changePaletteStart(u8 paletteStart) {
+	int moveBy = paletteStart - _paletteStart;
+
+	if(moveBy != 0) {
+		for(u8 &px : _bitmap) {
+			px += moveBy;
+		}
+
+		_paletteStart = paletteStart;
+	}
+}
+
+void Image::copyPalette(int paletteStart) {
+	tonccpy((currentScreen ? BG_PALETTE : BG_PALETTE_SUB) + paletteStart, _palette.data(), _palette.size() * 2);
+}
+
+void Image::draw(int x, int y, float scaleX, float scaleY, bool skipAlpha) {
 	SCALE_3DS(x);
 	SCALE_3DS(y);
-
-	if(copyPal)
-		tonccpy((currentScreen ? BG_PALETTE : BG_PALETTE_SUB) + _palOfs + paletteOffset, _palette.data(), _palette.size() * 2);
-
-	u8 *dst = (u8 *)bgGetGfxPtr(currentScreen ? 3 : 7) + y * 256 + x;
+	char s[64];
+	// _bitmap[0] = 39;
+	snprintf(s, sizeof(s), "%lu, %lu, %u, %u, 0x%X", _width, _height, _bitmap.size(), _bitmap[0], 0);
 
 	// If the scale is 1 use faster integer math
 	if(scaleX == 1.0f && scaleY == 1.0f) {
-		for(int i = 0; i < _height; i++) {
-			for(int j = 0; j < _width; j++) {
-				u8 px = _bitmap[i * _width + j];
-				if(_palette[px - _palOfs] & 0x8000)
-					toncset(dst + i * 256 + j, px + paletteOffset, 1);
+		if(skipAlpha) {
+			for(u32 i = 0; i < _height; i++) {
+				u8 *src = _bitmap.data() + i * _width;
+				u8 *dst = (u8 *)bgGetGfxPtr(currentScreen ? 3 : 7) + (y + i) * 256 + x;
+				for(u32 j = 0; j < _width; j++) {
+					if(_palette[src[j] - _paletteStart] != 0x7C1F)
+						toncset(dst + j, src[j], 1);
+				}
+			}
+		} else {
+			u8 *dst = (u8 *)bgGetGfxPtr(currentScreen ? 3 : 7) + y * 256 + x;
+			for(u32 i = 0; i < _height; i++) {
+				tonccpy(dst + i * 256, _bitmap.data() + i * _width, _width);
 			}
 		}
 	} else {
-		for(int i = 0; i < _height * scaleY; i++) {
-			for(int j = 0; j < _width * scaleX; j++) {
+		for(u32 i = 0; i < _height * scaleY; i++) {
+			u8 *dst = (u8 *)bgGetGfxPtr(currentScreen ? 3 : 7) + (y + i) * 256 + x;
+			for(u32 j = 0; j < _width * scaleX; j++) {
 				u8 px = _bitmap[int(i / scaleY) * _width + int(j / scaleX)];
-				if(_palette[px - _palOfs] & 0x8000)
-					toncset(dst + i * 256 + j, px + paletteOffset, 1);
+				if(_palette[px - _paletteStart] != 0x7C1F || !skipAlpha)
+					toncset(dst + j, px, 1);
 			}
 		}
 	}
 }
 
-void Image::drawSegment(int x, int y, int imageX, int imageY, int w, int h, bool copyPal) {
+void Image::drawSegment(int x, int y, int imageX, int imageY, int w, int h, float scaleX, float scaleY, bool skipAlpha) {
 	SCALE_3DS(x);
 	SCALE_3DS(y);
-
-	if(copyPal)
-		tonccpy((currentScreen ? BG_PALETTE : BG_PALETTE_SUB) + _palOfs, _palette.data(), _palette.size() * 2);
-
-	for(int i = 0; i < h; i++) {
-		tonccpy((u8 *)bgGetGfxPtr(currentScreen ? 3 : 7) + (y + i) * 256 + x,
-				_bitmap.data() + (imageY + i) * _width + imageX, w);
-	}
-}
-
-void Image::drawSegmentSpecial(int x, int y, int imageX, int imageY, int w, int h, float scaleX,
-							   float scaleY, int paletteOffset, bool copyPal) {
-	SCALE_3DS(x);
-	SCALE_3DS(y);
-
-	if(copyPal)
-		tonccpy((currentScreen ? BG_PALETTE : BG_PALETTE_SUB) + _palOfs + paletteOffset, _palette.data(), _palette.size() * 2);
-
-	u8 *dst = (u8 *)bgGetGfxPtr(currentScreen ? 3 : 7) + y * 256 + x;
 
 	// If the scale is 1 use faster integer math
 	if(scaleX == 1.0f && scaleY == 1.0f) {
-		for(int i = 0; i < h; i++) {
-			for(int j = 0; j < w; j++) {
-				u8 px = _bitmap[i * _width + j];
-				if(_palette[px - _palOfs] & 0x8000)
-					toncset(dst + i * 256 + j, px + paletteOffset, 1);
+		if(skipAlpha) {
+			for(int i = 0; i < h; i++) {
+				u8 *src = _bitmap.data() + i * _width;
+				u8 *dst = (u8 *)bgGetGfxPtr(currentScreen ? 3 : 7) + (y + i) * 256 + x;
+				for(int j = 0; j < w; j++) {
+					if(_palette[src[j] - _paletteStart] != 0x7C1F)
+						toncset(dst + j, src[j], 1);
+				}
+			}
+		} else {
+			for(int i = 0; i < h; i++) {
+				tonccpy((u8 *)bgGetGfxPtr(currentScreen ? 3 : 7) + (y + i) * 256 + x,
+						_bitmap.data() + (imageY + i) * _width + imageX, w);
 			}
 		}
 	} else {
-		for(int i = 0; i < h * scaleY; i++) {
-			for(int j = 0; j < w * scaleX; j++) {
+		for(u32 i = 0; i < h * scaleY; i++) {
+			u8 *dst = (u8 *)bgGetGfxPtr(currentScreen ? 3 : 7) + (y + i) * 256 + x;
+			for(u32 j = 0; j < w * scaleX; j++) {
 				u8 px = _bitmap[(imageY + int(i / scaleY)) * _width + imageX + int(j / scaleX)];
-				if(_palette[px - _palOfs] & 0x8000)
-					toncset(dst + i * 256 + j, px + paletteOffset, 1);
+				if(_palette[px - _paletteStart] != 0x7C1F || !skipAlpha)
+					toncset(dst + j, px, 1);
 			}
 		}
 	}

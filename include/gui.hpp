@@ -28,9 +28,9 @@
 #define _UNIVERSAL_CORE_GUI_HPP
 
 #include "font.hpp"
-#include "image.hpp"
 #include "screen.hpp"
 #include "sprite.hpp"
+#include "spritesheet.hpp"
 
 #include <nds/ndstypes.h>
 
@@ -66,23 +66,23 @@ namespace Gui {
 	void clearScreen(bool top);
 
 	/*
-		Load an image (TODO: spritesheets?).
+		Load an a spritesheet
 
-		Path: Path to the image file. (GFX)
-		sheet: Reference to the Image declaration.
+		Path: Path to the spritesheet file. (TDX)
+		sheet: Reference to the Spritesheet declaration.
 	*/
-	bool loadSheet(const char *Path, Image &image);
+	bool loadSheet(const char *Path, Spritesheet &image);
 
 	/*
 		Draw an image.
-		image: The image which should be used.
-		imgIndex: For compatibility with 3DS, unused.
+		image: The spritesheet which should be used.
+		imgIndex: Index within the spritesheet.
 		x: The X Position where the sprite should be drawn.
 		y: The Y Position where the sprite should be drawn.
 		ScaleX: The X-Scale for the sprite. (Optional!)
 		ScaleY: The Y-Scale for the sprite. (Optional!)
 	*/
-	void DrawSprite(Image image, size_t imgindex, int x, int y, float ScaleX = 1.0f, float ScaleY = 1.0f);
+	void DrawSprite(Spritesheet &sheet, size_t imgindex, int x, int y, float ScaleX = 1.0f, float ScaleY = 1.0f);
 
 	/*
 		Initialize the GUI.
