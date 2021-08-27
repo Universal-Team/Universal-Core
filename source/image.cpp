@@ -88,7 +88,7 @@ Image::Image(const u8 *grf, u8 paletteStart) {
 	load(grf, paletteStart);
 }
 
-void Image::load(const u8 *grf, u8 paletteStart) {
+void Image::load(const u8 *grf, u8 paletteStartLoc) {
 	const u32 *ptr = (u32 *)grf;
 	if(!ptr || ptr[0] != 0x46464952 || ptr[2] != 0x20465247) {
 		return;
@@ -106,7 +106,7 @@ void Image::load(const u8 *grf, u8 paletteStart) {
 			} case 0x20584647: { // 'GFX '
 				_bitmap = std::vector<u8>(ptr[2] >> 8);
 				decompressGrf(_bitmap.data(), ptr + 2);
-				changePaletteStart(paletteStart);
+				paletteStart(paletteStartLoc);
 				break;
 			} case 0x204C4150: { // 'PAL '
 				_palette = std::vector<u16>((ptr[2] >> 8) / 2);
@@ -126,7 +126,7 @@ void Image::load(const u8 *grf, u8 paletteStart) {
 	}
 }
 
-void Image::changePaletteStart(u8 paletteStart) {
+void Image::paletteStart(u8 paletteStart) {
 	int moveBy = paletteStart - _paletteStart;
 
 	if(moveBy != 0) {
@@ -138,8 +138,8 @@ void Image::changePaletteStart(u8 paletteStart) {
 	}
 }
 
-void Image::copyPalette(int paletteStart) {
-	tonccpy((currentScreen ? BG_PALETTE : BG_PALETTE_SUB) + paletteStart, _palette.data(), _palette.size() * 2);
+void Image::copyPalette(void) {
+	tonccpy((currentScreen ? BG_PALETTE : BG_PALETTE_SUB) + _paletteStart, _palette.data(), _palette.size() * 2);
 }
 
 void Image::draw(int x, int y, float scaleX, float scaleY, bool skipAlpha) {

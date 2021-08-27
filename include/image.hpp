@@ -72,13 +72,12 @@ public:
 	const std::vector<u8> &bitmap(void) const { return _bitmap; }
 	const std::vector<u16> &palette(void) const { return _palette; }
 
-	void changePaletteStart(u8 paletteStart);
+	void paletteStart(u8 paletteStart);
 
 	/**
 	 * @brief Copies the palette into VRAM
-	 * @param paletteStart Where to start the palette in VRAM
 	 */
-	void copyPalette(int paletteStart);
+	void copyPalette(void);
 
 	/**
 	 * @brief Draws the image to a background layer, slower but can skip alpha, scale, and offset the palette
