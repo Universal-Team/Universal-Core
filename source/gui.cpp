@@ -44,7 +44,7 @@ int fadecolor = 0;
 bool widescreen = false;
 int selectorTimer = 0;
 
-bool Gui::init(const char *FontPath) {
+bool Gui::init(const std::vector<std::string> &FontPaths) {
 	// Initialize video mode
 	videoSetMode(MODE_5_2D);
 	videoSetModeSub(MODE_5_2D);
@@ -74,7 +74,7 @@ bool Gui::init(const char *FontPath) {
 	REG_BLDCNT_SUB = 1 << 11;
 
 	// Load the default font
-	DefaultFont = std::make_unique<Font>(std::vector<std::string>({"sd:/_nds/Universal-Updater/font.nftr", "fat:/_nds/Universal-Updater/font.nftr", "nitro:/graphics/font/default.nftr"}));
+	DefaultFont = std::make_unique<Font>(FontPaths);
 
 	return true;
 }
@@ -91,9 +91,8 @@ void Gui::DrawSprite(Spritesheet &sheet, size_t imgindex, int x, int y, float Sc
 	sheet[imgindex].draw(x, y, 0x20, ScaleX, ScaleY);
 }
 
-bool Gui::loadFont(Font &fnt, const char *Path) {
-	if(Path && access(Path, F_OK) == 0) // Only load if found.
-		fnt = Font(Path);
+bool Gui::loadFont(Font &fnt, const std::vector<std::string> &Paths) {
+	fnt = Font(Paths);
 
 	return true;
 }
@@ -105,8 +104,8 @@ bool Gui::loadSheet(const char *Path, Spritesheet &sheet) {
 	return true;
 }
 
-bool Gui::reinit(const char *FontPath) {
-	return Gui::init(FontPath);
+bool Gui::reinit(const std::vector<std::string> &FontPaths) {
+	return Gui::init(FontPaths);
 }
 
 void Gui::DrawStringCentered(int x, int y, float size, u8 color, const std::string &Text, int maxWidth, int maxHeight, Font *fnt, int flags) {

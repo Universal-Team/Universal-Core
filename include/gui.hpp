@@ -88,25 +88,25 @@ namespace Gui {
 		Initialize the GUI.
 		Call this when initializing.
 
-		FontPath: The font to use.
+		FontPaths: The locations to check for the font.
 	*/
-	bool init(const char *FontPath = nullptr);
+	bool init(const std::vector<std::string> &FontPaths);
 
 	/*
 		Load a Font. (NFTR)
 
 		fnt: The Font variable which should be initialized.
-		Path: Path to the NFTR file.
+		Paths: The locations to check for the NFTR file.
 		if you're unsure, just call 'Gui::init();' and it will load the default font.
 	*/
-	bool loadFont(Font &fnt, const char *Path = nullptr);
+	bool loadFont(Font &fnt, const std::vector<std::string> &Paths);
 
 	/*
 		Reinit the GUI.
 
-		FontPath: The font to use.
+		FontPaths: The locations to check for the font.
 	*/
-	bool reinit(const char *FontPath = nullptr);
+	bool reinit(const std::vector<std::string> &FontPaths);
 
 	/*
 		Draws a centered String.
