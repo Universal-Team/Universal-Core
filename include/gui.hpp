@@ -113,14 +113,14 @@ namespace Gui {
 		x: The X Offset from center. (Center: 200 px on top, 160 px on Bottom.)
 		y: The Y Position of the Text.
 		size: The size of the Text.
-		palette: The palette of the Text.
+		color: The color of the Text.
 		Text: The Text which should be displayed.
 		maxWidth: The maxWidth for the Text. (Optional!)
 		maxHeight: The maxHeight of the Text. (Optional!)
 		fnt: The Font which should be used. Uses default font by default. (Optional!)
 		int flags: C2D text flags to use. (Optional!)
 	*/
-	void DrawStringCentered(int x, int y, float size, Palette palette, const std::string &Text, int maxWidth = 0, int maxHeight = 0, Font *fnt = nullptr, int flags = 0);
+	void DrawStringCentered(int x, int y, float size, u8 color, const std::string &Text, int maxWidth = 0, int maxHeight = 0, Font *fnt = nullptr, int flags = 0);
 
 	/*
 		Draws a String.
@@ -128,14 +128,14 @@ namespace Gui {
 		x: The X Position where the Text should be drawn.
 		y: The Y Position where the Text should be drawn.
 		size: The size of the Text.
-		palette: The palette of the Text.
+		color: The color of the Text.
 		Text: The Text which should be displayed.
 		maxWidth: The maxWidth for the Text. (Optional!)
 		maxHeight: The maxHeight of the Text. (Optional!)
 		fnt: The Font which should be used. Uses default font by default. (Optional!)
 		flags: C2D text flags to use.
 	*/
-	void DrawString(int x, int y, float size, Palette palette, const std::string &Text, int maxWidth = 0, int maxHeight = 0, Font *fnt = nullptr, int flags = 0);
+	void DrawString(int x, int y, float size, u8 color, const std::string &Text, int maxWidth = 0, int maxHeight = 0, Font *fnt = nullptr, int flags = 0);
 
 	/*
 		Get the width of a String.

@@ -77,7 +77,7 @@ public:
 	/**
 	 * @brief Copies the palette into VRAM
 	 */
-	void copyPalette(void);
+	void copyPalette(void) const;
 
 	/**
 	 * @brief Draws the image to a background layer, slower but can skip alpha, scale, and offset the palette
@@ -87,7 +87,7 @@ public:
 	 * @param scaleY (Optional) The scale for the Y axis
 	 * @param skipAlpha (Optional) Whether to skip transparent pixels, draws faster when disabled at 1.0 scale
 	 */
-	void draw(int x, int y, float scaleX = 1.0f, float scaleY = 1.0f, bool skipAlpha = true);
+	void draw(int x, int y, float scaleX = 1.0f, float scaleY = 1.0f, bool skipAlpha = true) const;
 
 	/**
 	 * @brief Draws a segment of an image to a background layer, slower but can skip alpha, scale, and offset the palette
@@ -101,8 +101,13 @@ public:
 	 * @param scaleY (Optional) The scale for the Y axis
 	 * @param skipAlpha (Optional) Whether to skip transparent pixels, draws faster when disabled at 1.0 scale
 	 */
-	void drawSegment(int x, int y, int imageX, int imageY, int w, int h, float scaleX = 1.0f, float scaleY = 1.0f, bool skipAlpha = true);
+	void drawSegment(int x, int y, int imageX, int imageY, int w, int h, float scaleX = 1.0f, float scaleY = 1.0f, bool skipAlpha = true) const;
 
+	/**
+	 * @brief Returns the pixel at index
+	 * @param index The index of the pixel to get
+	 */
+	u16 operator[](int index) const;
 };
 
 #endif

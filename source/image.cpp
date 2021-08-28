@@ -138,22 +138,19 @@ void Image::paletteStart(u8 paletteStart) {
 	}
 }
 
-void Image::copyPalette(void) {
+void Image::copyPalette(void) const {
 	tonccpy((currentScreen ? BG_PALETTE : BG_PALETTE_SUB) + _paletteStart, _palette.data(), _palette.size() * 2);
 }
 
-void Image::draw(int x, int y, float scaleX, float scaleY, bool skipAlpha) {
+void Image::draw(int x, int y, float scaleX, float scaleY, bool skipAlpha) const {
 	SCALE_3DS(x);
 	SCALE_3DS(y);
-	char s[64];
-	// _bitmap[0] = 39;
-	snprintf(s, sizeof(s), "%lu, %lu, %u, %u, 0x%X", _width, _height, _bitmap.size(), _bitmap[0], 0);
 
 	// If the scale is 1 use faster integer math
 	if(scaleX == 1.0f && scaleY == 1.0f) {
 		if(skipAlpha) {
 			for(u32 i = 0; i < _height; i++) {
-				u8 *src = _bitmap.data() + i * _width;
+				const u8 *src = _bitmap.data() + i * _width;
 				u8 *dst = (u8 *)bgGetGfxPtr(currentScreen ? 3 : 7) + (y + i) * 256 + x;
 				for(u32 j = 0; j < _width; j++) {
 					if(_palette[src[j] - _paletteStart] & 0x8000)
@@ -178,7 +175,7 @@ void Image::draw(int x, int y, float scaleX, float scaleY, bool skipAlpha) {
 	}
 }
 
-void Image::drawSegment(int x, int y, int imageX, int imageY, int w, int h, float scaleX, float scaleY, bool skipAlpha) {
+void Image::drawSegment(int x, int y, int imageX, int imageY, int w, int h, float scaleX, float scaleY, bool skipAlpha) const {
 	SCALE_3DS(x);
 	SCALE_3DS(y);
 
@@ -186,7 +183,7 @@ void Image::drawSegment(int x, int y, int imageX, int imageY, int w, int h, floa
 	if(scaleX == 1.0f && scaleY == 1.0f) {
 		if(skipAlpha) {
 			for(int i = 0; i < h; i++) {
-				u8 *src = _bitmap.data() + i * _width;
+				const u8 *src = _bitmap.data() + i * _width;
 				u8 *dst = (u8 *)bgGetGfxPtr(currentScreen ? 3 : 7) + (y + i) * 256 + x;
 				for(int j = 0; j < w; j++) {
 					if(_palette[src[j] - _paletteStart] & 0x8000)
@@ -209,4 +206,8 @@ void Image::drawSegment(int x, int y, int imageX, int imageY, int w, int h, floa
 			}
 		}
 	}
+}
+
+u16 Image::operator[](int index) const {
+	return _palette[_bitmap[index] - _paletteStart];
 }

@@ -112,23 +112,13 @@ public:
 	/**
 	 * @brief Clears the sprite
 	 */
-	void clear(void);
+	void clear(void) const;
 
 	/**
 	 * @brief Fills the sprite with a solid color
 	 * @param color The color to fill with
 	 */
-	void fillColor(u16 color);
-
-	/**
-	* @brief Draws a rectangle outline to the sprite
-	* @param x The X position
-	* @param y The Y position
-	* @param w The Width
-	* @param h The Height
-	* @param color The color to use
-	*/
-	void drawOutline(int x, int y, int w, int h, u16 color);
+	void fillColor(u16 color) const;
 
 	/**
 	 * @brief Draws a solid color rectangle to the sprite
@@ -138,17 +128,7 @@ public:
 	 * @param h The height of the rectangle
 	 * @param color The color of the rectangle
 	 */
-	void drawRectangle(int x, int y, int w, int h, u16 color) { drawRectangle(x, y, w, h, color, color); }
-	/**
-	 * @brief Draws a solid color rectangle to the sprite
-	 * @param x The X position to draw at
-	 * @param y The Y position to draw at
-	 * @param w The width of the rectangle
-	 * @param h The height of the rectangle
-	 * @param color The color of even rows
-	 * @param color The color of odd rows
-	 */
-	void drawRectangle(int x, int y, int w, int h, u16 color1, u16 color2);
+	void drawRectangle(int x, int y, int w, int h, u16 color) const;
 
 	/**
 	 * @brief Draws the image to a sprite, can skip alpha and scale the image
@@ -158,7 +138,7 @@ public:
 	 * @param scaleX (Optional) The scale for the X axis
 	 * @param scaleY (Optional) The scale for the Y axis
 	 */
-	void drawImage(int x, int y, const Image &image, float scaleX = 1.0f, float scaleY = 1.0f);
+	void drawImage(int x, int y, const Image &image, float scaleX = 1.0f, float scaleY = 1.0f) const;
 
 	/**
 	 * @brief Draws a segment of an image to a sprite, faster but overwrites alpha and no scaling
@@ -172,12 +152,12 @@ public:
 	 * @param scaleX (Optional) The scale for the X axis
 	 * @param scaleY (Optional) The scale for the Y axis
 	 */
-	void drawImageSegment(int x, int y, int imageX, int imageY, int w, int h, const Image &image, float scaleX = 1.0f, float scaleY = 1.0f);
+	void drawImageSegment(int x, int y, int imageX, int imageY, int w, int h, const Image &image, float scaleX = 1.0f, float scaleY = 1.0f) const;
 
 	/**
 	 * @brief Updates the OAM that this sprite is on, also updates all other sprites on that screen. Avoid calling this excessively, if changing a lot of sprites call it once when they're all done.
 	 */
-	void update(void) { oamUpdate(_oam); }
+	void update(void) const { oamUpdate(_oam); }
 	/**
 	 * @brief Updates all sprites on the given screen. Avoid calling this excessively, if changing a lot of sprites call it once when they're all done.
 	 * @param top Whether to update the top or bottom screen

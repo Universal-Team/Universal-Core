@@ -180,36 +180,22 @@ void Sprite::visibility(bool show) {
 	}
 }
 
-void Sprite::clear(void) { toncset16(_gfx, 0, (_size & 0xFF) << 5); }
+void Sprite::clear(void) const { toncset16(_gfx, 0, (_size & 0xFF) << 5); }
 
-void Sprite::fillColor(u16 color) { toncset16(_gfx, color, (_size & 0xFF) << 5); }
+void Sprite::fillColor(u16 color) const { toncset16(_gfx, color, (_size & 0xFF) << 5); }
 
-void Sprite::drawOutline(int x, int y, int w, int h, u16 color) {
-	h += y;
-	if(y >= 0 && y <= _height)
-		toncset16(_gfx + y * _width + std::max(x, 0), color, std::min(w, _width - x));
-	for(y++; y < (h - 1); y++) {
-		if(y >= 0 && y <= _height && x >= 0)
-			_gfx[y * _width + x] = color;
-		if(y >= 0 && y <= _height && x + w <= _width)
-			_gfx[y * _width + x + w - 1] = color;
-	}
-	if(y >= 0 && y <= _height)
-		toncset16(_gfx + y * _width + std::max(x, 0), color, std::min(w, _width - x));
-}
-
-void Sprite::drawRectangle(int x, int y, int w, int h, u16 color1, u16 color2) {
+void Sprite::drawRectangle(int x, int y, int w, int h, u16 color) const {
 	for(int i = 0; i < h; i++) {
-		toncset16(_gfx + ((y + i) * _width + x), ((i % 2) ? color1 : color2), w);
+		toncset16(_gfx + ((y + i) * _width + x), color, w);
 	}
 }
 
-void Sprite::drawImage(int x, int y, const Image &image, float scaleX, float scaleY) {
+void Sprite::drawImage(int x, int y, const Image &image, float scaleX, float scaleY) const {
 	// If the scale is 1 use faster integer math
 	if(scaleX == 1.0f && scaleY == 1.0f) {
 		for(int i = 0; i < image.height(); i++) {
 			for(int j = 0; j < image.width(); j++) {
-				u16 px = image.palette()[image.bitmap()[i * image.width() + j] - image.paletteStart()];
+				u16 px = image[i * image.width() + j];
 				if(px & 0x8000)
 					_gfx[(y + i) * _height + x + j] = px;
 			}
@@ -217,8 +203,7 @@ void Sprite::drawImage(int x, int y, const Image &image, float scaleX, float sca
 	} else {
 		for(int i = 0; i < image.height() * scaleY; i++) {
 			for(int j = 0; j < image.width() * scaleX; j++) {
-				u16 px =
-					image.palette()[image.bitmap()[int(i / scaleY) * image.width() + int(j / scaleX)] - image.paletteStart()];
+				u16 px = image[int(i / scaleY) * image.width() + int(j / scaleX)];
 				if(px & 0x8000)
 					_gfx[(y + i) * _height + j + x] = px;
 			}
@@ -227,12 +212,12 @@ void Sprite::drawImage(int x, int y, const Image &image, float scaleX, float sca
 }
 
 void Sprite::drawImageSegment(int x, int y, int imageX, int imageY, int w, int h, const Image &image, float scaleX,
-							  float scaleY) {
+							  float scaleY) const {
 	// If the scale is 1 use faster integer math
 	if(scaleX == 1.0f && scaleY == 1.0f) {
 		for(int i = 0; i < h; i++) {
 			for(int j = 0; j < w; j++) {
-				u16 px = image.palette()[image.bitmap()[(imageY + i) * image.width() + imageX + j] - image.paletteStart()];
+				u16 px = image[(imageY + i) * image.width() + imageX + j];
 				if(px & 0x8000)
 					_gfx[(y + i) * _height + x + j] = px;
 			}
@@ -240,9 +225,7 @@ void Sprite::drawImageSegment(int x, int y, int imageX, int imageY, int w, int h
 	} else {
 		for(int i = 0; i < h * scaleY; i++) {
 			for(int j = 0; j < w * scaleX; j++) {
-				u16 px = image.palette()[image.bitmap()[(imageY + int(i / scaleY)) * image.width() + imageX +
-														int(j / scaleX)] -
-										 image.paletteStart()];
+				u16 px = image[imageY + int(i / scaleY) * image.width() + imageX + int(j / scaleX)];
 				if(px & 0x8000)
 					_gfx[(y + i) * _height + x + j] = px;
 			}

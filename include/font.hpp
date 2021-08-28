@@ -42,18 +42,6 @@ enum class Alignment {
 	right,
 };
 
-enum class Palette : u8 {
-#ifdef UNIVCORE_TEXT_PALETTES
-	UNIVCORE_TEXT_PALETTES
-#else
-	white
-#endif
-};
-
-#ifndef UNIVCORE_TEXT_DEFAULT_PALETTE
-#define UNIVCORE_TEXT_DEFAULT_PALETTE white
-#endif
-
 class Font {
 private:
 #ifdef UNIVCORE_TEXT_BUFFERED
@@ -67,9 +55,9 @@ private:
 	std::vector<u8> fontWidths;
 	std::vector<u16> fontMap;
 
-	u16 charIndex(char16_t c);
+	u16 charIndex(char16_t c) const;
 
-	void print(std::u16string_view text, int x, int y, Alignment align, Palette palette, int maxWidth, float scaleX, float scaleY, bool rtl, Sprite *sprite);
+	void print(std::u16string_view text, int x, int y, Alignment align, u8 color, int maxWidth, float scaleX, float scaleY, bool rtl, Sprite *sprite) const;
 
 public:
 	/**
@@ -97,15 +85,15 @@ public:
 	 * @brief The height of the font
 	 * @return The font height
 	 */
-	u8 height(void) { return tileHeight; }
+	u8 height(void) const { return tileHeight; }
 
 	/**
 	 * @brief Calculates the width of a given string of text
 	 * @param text The text to calculate the width of
 	 * @return The width of the given string
 	 */
-	int calcWidth(std::string_view text) { return calcWidth(utf8to16(text)); }
-	int calcWidth(std::u16string_view text);
+	int calcWidth(std::string_view text) const { return calcWidth(utf8to16(text)); }
+	int calcWidth(std::u16string_view text) const;
 
 	/**
 	 * @brief Prints an integer value to a background layer
@@ -113,12 +101,12 @@ public:
 	 * @param y The Y position to print at
 	 * @param value The value to print
 	 * @param align (Optional) The alignment to use
-	 * @param palette (Optional) The palette to use
+	 * @param color (Optional) The color to use
 	 * @param maxWidth (Optional) The maximum width of the string, set to 0 for no max width
 	 * @param scaleX (Optional) The scale on the X axis
 	 * @param scaleY (Optional) The scale on the Y axis
 	 */
-	void print(int x, int y, int value, Alignment align = Alignment::left, Palette palette = Palette::UNIVCORE_TEXT_DEFAULT_PALETTE, int maxWidth = 0, float scaleX = 1.0f, float scaleY = 1.0f) { print(utf8to16(std::to_string(value)), x, y, align, palette, maxWidth, scaleX, scaleY, false, nullptr); }
+	void print(int x, int y, int value, Alignment align = Alignment::left, u8 color = 0, int maxWidth = 0, float scaleX = 1.0f, float scaleY = 1.0f) const { print(utf8to16(std::to_string(value)), x, y, align, color, maxWidth, scaleX, scaleY, false, nullptr); }
 
 	/**
 	 * @brief Prints a string to a background layer
@@ -126,13 +114,13 @@ public:
 	 * @param y The Y position to print at
 	 * @param text The string to print
 	 * @param align (Optional) The alignment to use
-	 * @param palette (Optional) The palette to use
+	 * @param color (Optional) The color to use
 	 * @param maxWidth (Optional) The maximum width of the string, set to 0 for no max width
 	 * @param scaleX (Optional) The scale on the X axis
 	 * @param scaleY (Optional) The scale on the Y axis
 	 */
-	void print(int x, int y, std::string_view text, Alignment align = Alignment::left, Palette palette = Palette::UNIVCORE_TEXT_DEFAULT_PALETTE, int maxWidth = 0, float scaleX = 1.0f, float scaleY = 1.0f) { print(utf8to16(text), x, y, align, palette, maxWidth, scaleX, scaleY, false, nullptr); }
-	void print(int x, int y, std::u16string_view text, Alignment align = Alignment::left, Palette palette = Palette::UNIVCORE_TEXT_DEFAULT_PALETTE, int maxWidth = 0, float scaleX = 1.0f, float scaleY = 1.0f) { print(text, x, y, align, palette, maxWidth, scaleX, scaleY, false, nullptr); }
+	void print(int x, int y, std::string_view text, Alignment align = Alignment::left, u8 color = 0, int maxWidth = 0, float scaleX = 1.0f, float scaleY = 1.0f) const { print(utf8to16(text), x, y, align, color, maxWidth, scaleX, scaleY, false, nullptr); }
+	void print(int x, int y, std::u16string_view text, Alignment align = Alignment::left, u8 color = 0, int maxWidth = 0, float scaleX = 1.0f, float scaleY = 1.0f) const { print(text, x, y, align, color, maxWidth, scaleX, scaleY, false, nullptr); }
 
 	/**
 	 * @brief Prints an integer value to a sprite
@@ -141,12 +129,12 @@ public:
 	 * @param value The value to print
 	 * @param sprite The sprite to print to
 	 * @param align (Optional) The alignment to use
-	 * @param palette (Optional) The palette to use
+	 * @param color (Optional) The color to use
 	 * @param maxWidth (Optional) The maximum width of the string, set to 0 for no max width
 	 * @param scaleX (Optional) The scale on the X axis
 	 * @param scaleY (Optional) The scale on the Y axis
 	 */
-	void print(int x, int y, int value, Sprite &sprite, Alignment align = Alignment::left, Palette palette = Palette::UNIVCORE_TEXT_DEFAULT_PALETTE, int maxWidth = 0, float scaleX = 1.0f, float scaleY = 1.0f) { print(utf8to16(std::to_string(value)), x, y, align, palette, maxWidth, scaleX, scaleY, false, nullptr); }
+	void print(int x, int y, int value, Sprite &sprite, Alignment align = Alignment::left, u8 color = 0, int maxWidth = 0, float scaleX = 1.0f, float scaleY = 1.0f) const { print(utf8to16(std::to_string(value)), x, y, align, color, maxWidth, scaleX, scaleY, false, nullptr); }
 
 	/**
 	 * @brief Prints a string to a sprite
@@ -155,13 +143,13 @@ public:
 	 * @param text The string to print
 	 * @param sprite The sprite to print to
 	 * @param align (Optional) The alignment to use
-	 * @param palette (Optional) The palette to use
+	 * @param color (Optional) The color to use
 	 * @param maxWidth (Optional) The maximum width of the string, set to 0 for no max width
 	 * @param scaleX (Optional) The scale on the X axis
 	 * @param scaleY (Optional) The scale on the Y axis
 	 */
-	void print(int x, int y, std::string_view text, Sprite &sprite, Alignment align = Alignment::left, Palette palette = Palette::UNIVCORE_TEXT_DEFAULT_PALETTE, int maxWidth = 0, float scaleX = 1.0f, float scaleY = 1.0f) { print(utf8to16(text), x, y, align, palette, maxWidth, scaleX, scaleY, false, &sprite); }
-	void print(int x, int y, std::u16string_view text, Sprite &sprite, Alignment align = Alignment::left, Palette palette = Palette::UNIVCORE_TEXT_DEFAULT_PALETTE, int maxWidth = 0, float scaleX = 1.0f, float scaleY = 1.0f) { print(text, x, y, align, palette, maxWidth, scaleX, scaleY, false, &sprite); }
+	void print(int x, int y, std::string_view text, Sprite &sprite, Alignment align = Alignment::left, u8 color = 0, int maxWidth = 0, float scaleX = 1.0f, float scaleY = 1.0f) const { print(utf8to16(text), x, y, align, color, maxWidth, scaleX, scaleY, false, &sprite); }
+	void print(int x, int y, std::u16string_view text, Sprite &sprite, Alignment align = Alignment::left, u8 color = 0, int maxWidth = 0, float scaleX = 1.0f, float scaleY = 1.0f) const { print(text, x, y, align, color, maxWidth, scaleX, scaleY, false, &sprite); }
 
 #ifdef UNIVCORE_TEXT_BUFFERED
 	/**

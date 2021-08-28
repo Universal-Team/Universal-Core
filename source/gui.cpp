@@ -109,23 +109,23 @@ bool Gui::reinit(const char *FontPath) {
 	return Gui::init(FontPath);
 }
 
-void Gui::DrawStringCentered(int x, int y, float size, Palette palette, const std::string &Text, int maxWidth, int maxHeight, Font *fnt, int flags) {
+void Gui::DrawStringCentered(int x, int y, float size, u8 color, const std::string &Text, int maxWidth, int maxHeight, Font *fnt, int flags) {
 #ifdef UNIVCORE_3DS_SIZE
-	Gui::DrawString(x, y, size, palette, Text, maxWidth, maxHeight, fnt, flags | C2D_AlignCenter);
+	Gui::DrawString(x, y, size, color, Text, maxWidth, maxHeight, fnt, flags | C2D_AlignCenter);
 #else
-	Gui::DrawString(x, y, size, palette, Text, maxWidth, maxHeight, fnt, flags | C2D_AlignCenter);
+	Gui::DrawString(x, y, size, color, Text, maxWidth, maxHeight, fnt, flags | C2D_AlignCenter);
 #endif
 }
 
-void Gui::DrawString(int x, int y, float size, Palette palette, const std::string &Text, int maxWidth, int maxHeight, Font *fnt, int flags) {
+void Gui::DrawString(int x, int y, float size, u8 color, const std::string &Text, int maxWidth, int maxHeight, Font *fnt, int flags) {
 	float heightScale = maxHeight == 0 ? size : std::min(size, size * (maxHeight / Gui::GetStringHeight(size, Text, fnt)));
 	float widthScale = maxWidth == 0 ? size : std::min(size, size * (maxWidth / Gui::GetStringWidth(size, Text, fnt)));
 
 	// TODO: Wrapping and such
 	if(fnt)
-		fnt->print(x, y, Text, flags & C2D_AlignCenter ? Alignment::center : (flags & C2D_AlignRight ? Alignment::right : Alignment::left), palette, maxWidth, widthScale, heightScale);
+		fnt->print(x, y, Text, flags & C2D_AlignCenter ? Alignment::center : (flags & C2D_AlignRight ? Alignment::right : Alignment::left), color, maxWidth, widthScale, heightScale);
 	else
-		DefaultFont->print(x, y, Text, flags & C2D_AlignCenter ? Alignment::center : (flags & C2D_AlignRight ? Alignment::right : Alignment::left), palette, maxWidth, widthScale, heightScale);
+		DefaultFont->print(x, y, Text, flags & C2D_AlignCenter ? Alignment::center : (flags & C2D_AlignRight ? Alignment::right : Alignment::left), color, maxWidth, widthScale, heightScale);
 }
 
 int Gui::GetStringWidth(float size, const std::string &Text, Font *fnt) {

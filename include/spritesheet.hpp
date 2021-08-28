@@ -54,13 +54,13 @@ public:
 	/**
 	 * @brief Returns the number of images in the spritesheet
 	 */
-	size_t size(void) { return _images.size(); }
+	size_t size(void) const { return _images.size(); }
 
 	/**
 	 * @brief Returns the Image at index
 	 * @param index The Image to get
 	 */
-	Image &operator[](size_t index);
+	Image &operator[](size_t index) const;
 };
 
 #endif

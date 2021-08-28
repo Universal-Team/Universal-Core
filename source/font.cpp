@@ -130,7 +130,7 @@ Font::Font(const std::vector<std::string> &paths) {
 	}
 }
 
-u16 Font::charIndex(char16_t c) {
+u16 Font::charIndex(char16_t c) const {
 	// Try a binary search
 	int left  = 0;
 	int right = fontMap.size();
@@ -173,7 +173,7 @@ std::u16string Font::utf8to16(std::string_view text) {
 	return out;
 }
 
-int Font::calcWidth(std::u16string_view text) {
+int Font::calcWidth(std::u16string_view text) const {
 	uint x = 0;
 
 	for(auto c : text) {
@@ -184,8 +184,8 @@ int Font::calcWidth(std::u16string_view text) {
 	return x;
 }
 
-ITCM_CODE void Font::print(std::u16string_view text, int x, int y, Alignment align, Palette palette,
-						   int maxWidth, float scaleX, float scaleY, bool rtl, Sprite *sprite) {
+ITCM_CODE void Font::print(std::u16string_view text, int x, int y, Alignment align, u8 color,
+						   int maxWidth, float scaleX, float scaleY, bool rtl, Sprite *sprite) const {
 	// If RTL isn't forced, check for RTL text
 	for(const auto c : text) {
 		if(c >= 0x0590 && c <= 0x05FF) {
@@ -203,7 +203,7 @@ ITCM_CODE void Font::print(std::u16string_view text, int x, int y, Alignment ali
 		case Alignment::center: {
 			size_t newline = text.find('\n');
 			while(newline != text.npos) {
-				print(text.substr(0, newline), x, y, align, palette, maxWidth, scaleX, scaleY, rtl, sprite);
+				print(text.substr(0, newline), x, y, align, color, maxWidth, scaleX, scaleY, rtl, sprite);
 				text    = text.substr(newline + 1);
 				newline = text.find('\n');
 				y += tileHeight;
@@ -216,7 +216,7 @@ ITCM_CODE void Font::print(std::u16string_view text, int x, int y, Alignment ali
 			size_t newline = text.find('\n');
 			while(newline != text.npos) {
 				print(text.substr(0, newline), x - (calcWidth(text.substr(0, newline)) * scaleX), y,
-					  Alignment::left, palette, maxWidth, scaleX, scaleY, rtl, sprite);
+					  Alignment::left, color, maxWidth, scaleX, scaleY, rtl, sprite);
 				text    = text.substr(newline + 1);
 				newline = text.find('\n');
 				y += tileHeight;
@@ -320,70 +320,44 @@ ITCM_CODE void Font::print(std::u16string_view text, int x, int y, Alignment ali
 			}
 		}
 
+		u8 *dstBegin;
+		int width, height;
 		if(sprite) {
-			// Don't draw off sprite chars
-			if(x >= 0 && x < sprite->width() && y >= 0 && y + tileHeight < sprite->height()) {
-				u16 *dst = sprite->gfx() + x + fontWidths[(index * 3)];
-				// Use faster integer math if scale is 1
-				if(scaleX == 1.0f && scaleY == 1.0f) {
-					for(int i = 0; i < tileHeight; i++) {
-						for(int j = 0; j < tileWidth; j++) {
-							u8 px = fontTiles[(index * tileSize) + (i * tileWidth + j) / 4] >>
-									((3 - ((i * tileWidth + j) % 4)) * 2) &
-								3;
-							if(px)
-								dst[(y + i) * sprite->width() + j] = px + (u8(palette) * 4);
-						}
-					}
-				} else {
-					for(float i = 0.0f; i < tileHeight; i += 1 / scaleY) {
-						for(float j = 0.0f; j < tileWidth; j += 1 / scaleY) {
-							u8 px = fontTiles[(index * tileSize) + (i * tileWidth + j) / 4] >>
-									((3 - (int(i * tileWidth + j) % 4)) * 2) &
-								3;
-							if(px)
-								dst[int((y + i) * sprite->width() + j)] = px + (u8(palette) * 4);
-						}
+			width = sprite->width();
+			height = sprite->height();
+			dstBegin = (u8 *)sprite->gfx();
+		} else {
+			width = 256;
+			height = 192;
+#ifdef UNIVCORE_TEXT_BUFFERED
+			dstBegin = textBuf[currentScreen];
+#else
+			dstBegin = (u8 *)bgGetGfxPtr(Gui::top ? 2 : 6);
+#endif
+		}
+		dstBegin += y * width + x + fontWidths[(index * 3)];
+
+		// Don't draw off screen chars
+		if(x >= 0 && x + fontWidths[(index * 3) + 2] < width && y >= 0 && y + tileHeight < height) {
+			// Use faster integer math if scale is 1
+			if(scaleX == 1.0f && scaleY == 1.0f) {
+				for(int i = 0; i < tileHeight; i++) {
+					u8 *dst = dstBegin + i * width;
+					for(int j = 0; j < tileWidth; j++) {
+						u8 px = fontTiles[(index * tileSize) + (i * tileWidth + j) / 4] >>
+								((3 - ((i * tileWidth + j) % 4)) * 2) & 3;
+						if(px)
+							toncset(dst + j, px + color, 1);
 					}
 				}
-			}
-		} else {
-			// Don't draw off screen chars
-			if(x >= 0 && x + fontWidths[(index * 3) + 2] < 256 && y >= 0 && y + tileHeight < 192) {
-#ifdef UNIVCORE_TEXT_BUFFERED
-				u8 *dst = textBuf[currentScreen] + y * 256 + x + fontWidths[(index * 3)];
-#else
-				u8 *dst = (u8 *)bgGetGfxPtr(Gui::top ? 2 : 6) + y * 256 + x + fontWidths[(index * 3)];
-#endif
-				// Use faster integer math if scale is 1
-				if(scaleX == 1.0f && scaleY == 1.0f) {
-					for(int i = 0; i < tileHeight; i++) {
-						for(int j = 0; j < tileWidth; j++) {
-							u8 px = fontTiles[(index * tileSize) + (i * tileWidth + j) / 4] >>
-									((3 - ((i * tileWidth + j) % 4)) * 2) &
-								3;
-							if(px) {
-#ifdef UNIVCORE_TEXT_BUFFERED
-								dst[i * 256 + j] = px + (u8(palette) * 4);
-#else
-								toncset(dst + i * 256 + j, px + (u8(palette) * 4), 1);
-#endif
-							}
-						}
-					}
-				} else {
-					for(int i = 0; i < tileHeight * scaleY; i++) {
-						for(int j = 0; j < tileWidth * scaleX; j++) {
-							u8 loc = int(i / scaleY) * tileWidth + int(j / scaleX);
-							u8 px  = fontTiles[index * tileSize + loc / 4] >> ((3 - (loc % 4)) * 2) & 3;
-							if(px) {
-#ifdef UNIVCORE_TEXT_BUFFERED
-								dst[i * 256 + j] = px + (u8(palette) * 4);
-#else
-								toncset(dst + i * 256 + j, px + (u8(palette) * 4), 1);
-#endif
-							}
-						}
+			} else {
+				for(int i = 0; i < tileHeight * scaleY; i++) {
+					u8 *dst = dstBegin + i * width;
+					for(int j = 0; j < tileWidth * scaleX; j++) {
+						u8 loc = int(i / scaleY) * tileWidth + int(j / scaleX);
+						u8 px  = fontTiles[index * tileSize + loc / 4] >> ((3 - (loc % 4)) * 2) & 3;
+						if(px)
+							toncset(dst + j, px + color, 1);
 					}
 				}
 			}

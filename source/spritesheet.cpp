@@ -83,7 +83,7 @@ Spritesheet::~Spritesheet(void) {
 	}
 }
 
-Image &Spritesheet::operator[](size_t index) {
+Image &Spritesheet::operator[](size_t index) const {
 	if(_images[index] && index < _images.size())
 		return *_images[index];
 	else
