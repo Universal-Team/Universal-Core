@@ -34,6 +34,7 @@
 class Image {
 private:
 	u32 _width = 0;
+	u32 _widthAligned = 0;
 	u32 _height = 0;
 	u8 _paletteStart = 0;
 	std::vector<u8> _bitmap = {};
