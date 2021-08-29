@@ -87,6 +87,10 @@ void Gui::clearTextBufs(void) {
 	DefaultFont->clear();
 }
 
+void Gui::updateTextBufs(bool top) {
+	DefaultFont->update(top);
+}
+
 void Gui::DrawSprite(Spritesheet &sheet, size_t imgindex, int x, int y, float ScaleX, float ScaleY) {
 	sheet[imgindex].draw(x, y, 0x20, ScaleX, ScaleY);
 }

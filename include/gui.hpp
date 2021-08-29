@@ -61,6 +61,11 @@ namespace Gui {
 	void clearTextBufs(void);
 
 	/*
+		Updates the Text Buffer to the screen.
+	*/
+	void updateTextBufs(bool top);
+
+	/*
 		Clear the screen.
 	*/
 	void clearScreen(bool top);
