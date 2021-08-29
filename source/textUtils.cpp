@@ -24,7 +24,7 @@
  *         reasonable ways as different from the original version.
  */
 
-#include "TextUtils.hpp"
+#include "textUtils.hpp"
 
 #include <string.h>
 
