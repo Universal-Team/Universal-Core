@@ -130,7 +130,7 @@ uint8_t UCKeyboard::GetCharSize(void) const {
 		Str++;
 	} while ((*Str & 0xC0) == 0x80);
 
-	return Str - this->CurrentString.c_str();
+	return Str - (this->CurrentString.c_str() + Cursor);
 }
 
 uint8_t UCKeyboard::GetPrevCharSize(void) const {
@@ -139,7 +139,7 @@ uint8_t UCKeyboard::GetPrevCharSize(void) const {
 		Str--;
 	} while ((*Str & 0xC0) == 0x80);
 
-	return this->CurrentString.c_str() - Str;
+	return this->CurrentString.c_str() + Cursor - Str;
 }
 
 void UCKeyboard::Draw(uint32_t Held, uint32_t Repeat, touchPosition T) const {
@@ -147,18 +147,24 @@ void UCKeyboard::Draw(uint32_t Held, uint32_t Repeat, touchPosition T) const {
 
 	/* A sub menu or so? */
 	if (!this->Loaded) {
-		Gui::Draw_Rect(48, 0, 320, 20, this->BarColor);
-		Gui::Draw_Rect(48, 20, 320, 1, this->OutlineColor);
+		Gui::Draw_Rect(40, 0, 320, 25, this->BarColor);
+		Gui::Draw_Rect(40, 25, 320, 1, this->OutlineColor);
 		Gui::DrawStringCentered(24, 2, 1.0f, this->TextColor, "Invalid keyboard layout", 310);
 
 	} else {
-		Gui::Draw_Rect(0, 0, 320, 240, this->BgColor);
-		Gui::DrawStringCentered(24, 2, 1.0f, this->TextColor, this->CurrentString, 310);
+		Gui::Draw_Rect(0, 0, 280, 25, this->BarColor);
+		Gui::Draw_Rect(0, 25, 280, 1, this->OutlineColor);
+		Gui::Draw_Rect(0, 26, 320, 240 - 26, this->BgColor);
+		Gui::DrawStringCentered(0, 2, 1.0f, this->TextColor, this->CurrentString, 310);
 
 		if (this->Kbd.contains(this->CurrentMode.back())) {
 			for (const auto &Key : this->Kbd.at(this->CurrentMode.back()).Keys) {
 				Gui::Draw_Rect(Key.Pos.x, Key.Pos.y, Key.Pos.w, Key.Pos.h, (Key.Active || Key.Pos.Touched(T) || Held & Key.Button) ? this->KeyColorPressed : this->KeyColor);
+#ifdef UNIVCORE_3DS_SIZE
 				Gui::DrawStringCentered(Key.Pos.x + (Key.Pos.w / 2) - 160, Key.Pos.y + (Key.Pos.h / 10), 1.0f, this->TextColor, Key.Label);
+#else
+				Gui::DrawStringCentered(Key.Pos.x + (Key.Pos.w / 2) - 128, Key.Pos.y + (Key.Pos.h / 10), 1.0f, this->TextColor, Key.Label);
+#endif
 			};
 
 		} else {
@@ -214,49 +220,47 @@ void UCKeyboard::HandleKeyPress(const Key &Key) {
 					if (Value == "backspace") {
 						if (this->Cursor > 0) {
 							this->Cursor -= GetPrevCharSize();
-							this->CurrentString = this->CurrentString.substr(0, this->Cursor) + this->CurrentString.substr(this->Cursor + GetCharSize(), this->CurrentString.size());
+							this->CurrentString = this->CurrentString.substr(0, this->Cursor) + this->CurrentString.substr(this->Cursor + GetCharSize());
 						};
+
 					} else if (Value == "delete") {
-						// TextEditor::Remove();
-						
+						if (this->Cursor + GetCharSize() < (int)this->CurrentString.size())
+							this->CurrentString = this->CurrentString.substr(0, this->Cursor) + this->CurrentString.substr(this->Cursor + GetCharSize());
+
 					} else if (Value == "up") {
-						// TextEditor::CursorUp();
+						this->Cursor = 0;
 
 					} else if (Value == "down") {
-						// TextEditor::CursorDown();
+						this->Cursor = this->CurrentString.size();
+						this->Cursor -= GetPrevCharSize();
 
 					} else if (Value == "left") {
-						// TextEditor::CursorLeft();
+						this->Cursor -= GetPrevCharSize();
 
 					} else if (Value == "right") {
-						// TextEditor::CursorRight();
+						this->Cursor += GetCharSize();
 
 					} else if (Value == "dakuten" || Value == "handakuten") {
-						// bool Handakuten = Value == "handakuten";
+						bool Handakuten = Value == "handakuten";
 
-						// if (TextEditor::CursorPos > 0) {
-						// 	TextEditor::CursorLeft();
-						// 	const std::string Char = UniversalEdit::UE->CurrentFile->GetCharacter(TextEditor::CurrentLine, TextEditor::CursorPos);
-						// 	const std::string Out = TextUtils::Dakutenify(Char, Handakuten);
+						if (this->Cursor > 0) {
+							this->Cursor -= GetPrevCharSize();
+							const std::string Char = this->CurrentString.substr(this->Cursor, GetCharSize());
+							const std::string Out = TextUtils::Dakutenify(Char, Handakuten);
 
-						// 	UniversalEdit::UE->CurrentFile->EraseContent(TextEditor::CurrentLine, TextEditor::CursorPos, Char.size());
-						// 	if (UniversalEdit::UE->CurrentFile->InsertContent(TextEditor::CurrentLine, TextEditor::CursorPos, Out)) {
-						// 		TextEditor::CursorRight();
+							this->CurrentString = this->CurrentString.substr(0, this->Cursor) + Out + this->CurrentString.substr(this->Cursor + GetCharSize());
+							this->Cursor += Out.size();
 
-						// 		if (Out.size() > Char.size()) TextEditor::CursorRight();
-						// 	};
+						} else {
+							this->CurrentString.insert(this->Cursor, Handakuten ? "゜" : "゛");
+							this->Cursor += 3;
+						};
 
-						// } else {
-						// 	if (UniversalEdit::UE->CurrentFile->InsertContent(TextEditor::CurrentLine, TextEditor::CursorPos, Handakuten ? "゜" : "゛")) {
-						// 		TextEditor::CursorPos += 3;
-						// 	};
-						// };
-
-					} else if (Value == "newline") {
-						// TextEditor::InsertLine();
+					} else if (Value == "enter") {
+						this->CurrentStatus = Status::DoneEnter;
 
 					} else if (Value == "exit") {
-						IsDone = true;
+						this->CurrentStatus = Status::DoneExit;
 
 					} else if (Value == "layout") {
 						this->SwitchLayout();
@@ -277,7 +281,7 @@ void UCKeyboard::HandleKeyPress(const Key &Key) {
 				/* Output a value that's not the label. */
 				case Key::Property::Value:
 					if(this->CurrentString.size() + Value.size() < this->MaxSize) {
-						this->CurrentString += Value;
+						this->CurrentString.insert(this->Cursor, Value);
 						this->Cursor += Value.size();
 					};
 					break;
@@ -291,8 +295,7 @@ void UCKeyboard::HandleKeyPress(const Key &Key) {
 		nocashMessage(Key.Label.c_str());
 		/* Otherwise, just output the label */
 		if(this->CurrentString.size() + Key.Label.size() < this->MaxSize) {
-			nocashMessage("adding");
-			this->CurrentString += Key.Label;
+			this->CurrentString.insert(this->Cursor, Key.Label);
 			this->Cursor += Key.Label.size();
 		};
 	};
@@ -303,9 +306,9 @@ std::string UCKeyboard::GetString(uint MaxSize, const std::string &Hint) {
 
 	u32 Held = 0, Repeat = 0;
 	touchPosition T;
-	while(1) {
-		this->Draw(Held, Repeat, T);
+	while(this->CurrentStatus == Status::Active) {
 		this->Handler(Held, Repeat, T);
+		this->Draw(Held, Repeat, T);
 
 		do {
 			swiWaitForVBlank();
@@ -313,8 +316,10 @@ std::string UCKeyboard::GetString(uint MaxSize, const std::string &Hint) {
 			Held = keysHeld();
 			Repeat = keysDownRepeat();
 			touchRead(&T);
-			SCALE_3DS(T.px);
-			SCALE_3DS(T.py);
+#ifdef UNIVCORE_3DS_SIZE
+			T.px = T.px * 5 / 4;
+			T.py = T.py * 5 / 4;
+#endif
 		} while (!Held);
 
 		if (Held & KEY_START) {
@@ -322,5 +327,5 @@ std::string UCKeyboard::GetString(uint MaxSize, const std::string &Hint) {
 		};
 	};
 
-	return this->CurrentString;
+	return this->CurrentStatus == Status::DoneExit ? "" : this->CurrentString;
 };

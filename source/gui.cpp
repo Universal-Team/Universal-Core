@@ -113,11 +113,7 @@ bool Gui::reinit(const std::vector<std::string> &FontPaths) {
 }
 
 void Gui::DrawStringCentered(int x, int y, float size, u8 color, const std::string &Text, int maxWidth, int maxHeight, Font *fnt, int flags) {
-#ifdef UNIVCORE_3DS_SIZE
 	Gui::DrawString(x, y, size, color, Text, maxWidth, maxHeight, fnt, flags | C2D_AlignCenter);
-#else
-	Gui::DrawString(x, y, size, color, Text, maxWidth, maxHeight, fnt, flags | C2D_AlignCenter);
-#endif
 }
 
 void Gui::DrawString(int x, int y, float size, u8 color, const std::string &Text, int maxWidth, int maxHeight, Font *fnt, int flags) {

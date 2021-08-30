@@ -34,6 +34,13 @@
 #include <vector>
 
 class UCKeyboard {
+public:
+	enum class Status {
+		Active,
+		DoneEnter,
+		DoneExit
+	};
+
 private:
 	struct Key {
 		enum class Property : uint8_t { Invalid, Action, Mode, Value };
@@ -63,7 +70,7 @@ private:
 	std::string CurrentString = "";
 	int Cursor = 0;
 	uint MaxSize = 0;
-	bool IsDone = false;
+	Status CurrentStatus = Status::Active;
 
 	uint8_t GetCharSize(void) const;
 	uint8_t GetPrevCharSize(void) const;
@@ -109,9 +116,9 @@ public:
 	std::string String(void) const { return CurrentString; };
 
 	/**
-	 * @brief Gets if the user is done inputting.
+	 * @brief Gets the status of the keyboard, use to check if the user has finished.
 	 */
-	bool Done(void) const { return IsDone; };
+	Status GetStatus(void) const { return CurrentStatus; };
 
 	/**
 	 * @brief Gets a string from user input.

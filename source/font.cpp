@@ -209,6 +209,7 @@ ITCM_CODE void Font::print(std::u16string_view text, int x, int y, Alignment ali
 				y += tileHeight;
 			}
 
+			SCALE_3DS(x);
 			x += ((sprite ? sprite->width() : 256) - (calcWidth(text) * scaleX)) / 2;
 			break;
 		}
