@@ -340,11 +340,34 @@ void Gui::DrawScreen(bool stack) {
 	Do the current screen's logic.
 
 	u32 hDown: The hidKeysDown() variable.
+	u32 hDownRepeat: the hidKeysDownRepeat() variable.
 	u32 hHeld: The hidKeysHeld() variable.
 	touchPosition touch: The touchPosition variable.
 	bool waitFade: If waiting for the fade until control of the screen or not.
 	bool stack: If using the stack-screens.
 */
+#ifdef UC_KEY_REPEAT
+void Gui::ScreenLogic(u32 hDown, u32 hDownRepeat, u32 hHeld, touchPosition touch, bool waitFade, bool stack) {
+	if (waitFade) {
+		if (!fadein && !fadeout && !fadein2 && !fadeout2) {
+			if (!stack) {
+				if (usedScreen)	usedScreen->Logic(hDown, hDownRepeat, hHeld, touch);
+
+			} else {
+				if (!screens.empty()) screens.top()->Logic(hDown, hDownRepeat, hHeld, touch);
+			}
+		}
+
+	} else {
+		if (!stack) {
+			if (usedScreen)	usedScreen->Logic(hDown, hDownRepeat, hHeld, touch);
+
+		} else {
+			if (!screens.empty()) screens.top()->Logic(hDown, hDownRepeat, hHeld, touch);
+		}
+	}
+}
+#else
 void Gui::ScreenLogic(u32 hDown, u32 hHeld, touchPosition touch, bool waitFade, bool stack) {
 	if (waitFade) {
 		if (!fadein && !fadeout && !fadein2 && !fadeout2) {
@@ -365,6 +388,7 @@ void Gui::ScreenLogic(u32 hDown, u32 hHeld, touchPosition touch, bool waitFade, 
 		}
 	}
 }
+#endif
 
 /*
 	Move's the tempScreen to the used one.

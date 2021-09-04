@@ -188,12 +188,17 @@ namespace Gui {
 		Used for the current Screen's Logic. (Optional!)
 
 		hDown: the hidKeysDown() variable.
+		hDownRepeat: the hidKeysDownRepeat() variable.
 		hHeld: the HidKeysHeld() variable.
 		touch: The TouchPosition variable.
 		waitFade: Wheter to wait until the fade ends.
 		stack: Is it the stack variant?
 	*/
+	#ifdef UC_KEY_REPEAT
+	void ScreenLogic(u32 hDown, u32 hDownRepeat, u32 hHeld, touchPosition touch, bool waitFade = true, bool stack = false);
+	#else
 	void ScreenLogic(u32 hDown, u32 hHeld, touchPosition touch, bool waitFade = true, bool stack = false);
+	#endif
 
 	/*
 		Transfer the Temp Screen to the used one. (Optional!)
