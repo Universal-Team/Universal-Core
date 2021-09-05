@@ -34,7 +34,7 @@
 
 #define ANIMATED_SELECTOR_COLOR 0xFF
 
-std::unique_ptr<Font> DefaultFont;
+std::array<std::unique_ptr<Font>, UNIVCORE_FONT_COUNT> DefaultFonts;
 std::unique_ptr<Screen> usedScreen, tempScreen; // tempScreen used for "fade" effects.
 std::stack<std::unique_ptr<Screen>> screens;
 bool currentScreen = false;
@@ -44,7 +44,7 @@ int fadecolor = 0;
 bool widescreen = false;
 int selectorTimer = 0;
 
-bool Gui::init(const std::vector<std::string> &FontPaths) {
+bool Gui::init(const std::array<std::vector<std::string>, UNIVCORE_FONT_COUNT> &FontPaths) {
 	// Initialize video mode
 	videoSetMode(MODE_5_2D);
 	videoSetModeSub(MODE_5_2D);
@@ -74,7 +74,9 @@ bool Gui::init(const std::vector<std::string> &FontPaths) {
 	REG_BLDCNT_SUB = 1 << 11;
 
 	// Load the default font
-	DefaultFont = std::make_unique<Font>(FontPaths);
+	for(size_t i = 0; i < DefaultFonts.size(); i++) {
+		DefaultFonts[i] = std::make_unique<Font>(FontPaths[i]);
+	}
 
 	return true;
 }
@@ -84,11 +86,11 @@ void Gui::clearScreen(bool top) {
 }
 
 void Gui::clearTextBufs(void) {
-	DefaultFont->clear();
+	Font::clear();
 }
 
 void Gui::updateTextBufs(bool top) {
-	DefaultFont->update(top);
+	Font::update(top);
 }
 
 void Gui::DrawSprite(Spritesheet &sheet, size_t imgindex, int x, int y, float ScaleX, float ScaleY) {
@@ -108,42 +110,45 @@ bool Gui::loadSheet(const char *Path, Spritesheet &sheet) {
 	return true;
 }
 
-bool Gui::reinit(const std::vector<std::string> &FontPaths) {
+bool Gui::reinit(const std::array<std::vector<std::string>, UNIVCORE_FONT_COUNT> &FontPaths) {
 	return Gui::init(FontPaths);
 }
 
-void Gui::DrawStringCentered(int x, int y, float size, u8 color, const std::string &Text, int maxWidth, int maxHeight, Font *fnt, int flags) {
+void Gui::DrawStringCentered(int x, int y, u8 size, u8 color, const std::string &Text, float maxWidth, float maxHeight, Font *fnt, int flags) {
 	Gui::DrawString(x, y, size, color, Text, maxWidth, maxHeight, fnt, flags | C2D_AlignCenter);
 }
 
-void Gui::DrawString(int x, int y, float size, u8 color, const std::string &Text, int maxWidth, int maxHeight, Font *fnt, int flags) {
-	float heightScale = maxHeight == 0 ? size : std::min(size, size * (maxHeight / Gui::GetStringHeight(size, Text, fnt)));
-	float widthScale = maxWidth == 0 ? size : std::min(size, size * (maxWidth / Gui::GetStringWidth(size, Text, fnt)));
+void Gui::DrawString(int x, int y, u8 size, u8 color, const std::string &Text, float maxWidth, float maxHeight, Font *fnt, int flags) {
+	if (!fnt && size >= DefaultFonts.size()) return;
+
+	float heightScale = maxHeight == 0 ? 1.0f : std::min(1.0f, maxHeight / Gui::GetStringHeight(size, Text, fnt));
+	float widthScale = maxWidth == 0 ? 1.0f : std::min(1.0f, maxWidth / Gui::GetStringWidth(size, Text, fnt));
 
 	// TODO: Wrapping and such
-	if(fnt)
-		fnt->print(x, y, Text, flags & C2D_AlignCenter ? Alignment::center : (flags & C2D_AlignRight ? Alignment::right : Alignment::left), color, maxWidth, widthScale, heightScale);
-	else
-		DefaultFont->print(x, y, Text, flags & C2D_AlignCenter ? Alignment::center : (flags & C2D_AlignRight ? Alignment::right : Alignment::left), color, maxWidth, widthScale, heightScale);
+	(fnt ? *fnt : *DefaultFonts[size]).print(x, y, Text, flags & C2D_AlignCenter ? Alignment::center : (flags & C2D_AlignRight ? Alignment::right : Alignment::left), color, maxWidth, widthScale, heightScale);
 }
 
-int Gui::GetStringWidth(float size, const std::string &Text, Font *fnt) {
+int Gui::GetStringWidth(u8 size, const std::string &Text, Font *fnt) {
 	if(fnt)
-		return fnt->calcWidth(Text) * size;
-	else
-		return DefaultFont->calcWidth(Text) * size;
+		return fnt->calcWidth(Text);
+	else if(size < DefaultFonts.size())
+		return DefaultFonts[size]->calcWidth(Text);
+
+	return 0;
 }
 
-int Gui::GetStringHeight(float size, const std::string &Text, Font *fnt) {
+int Gui::GetStringHeight(u8 size, const std::string &Text, Font *fnt) {
 	const int lines = 1 + std::count(Text.begin(), Text.end(), '\n');
 
 	if(fnt)
-		return fnt->height() * lines * size;
-	else
-		return DefaultFont->height() * lines * size;
+		return fnt->height() * lines;
+	else if(size < DefaultFonts.size())
+		return DefaultFonts[size]->height() * lines;
+
+	return 0;
 }
 
-void Gui::GetStringSize(float size, int *width, int *height, const std::string &Text, Font *fnt) {
+void Gui::GetStringSize(u8 size, int *width, int *height, const std::string &Text, Font *fnt) {
 	if(width)
 		*width = GetStringWidth(size, Text, fnt);
 

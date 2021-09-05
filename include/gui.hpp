@@ -37,9 +37,13 @@
 #include "UNIVCORE_CONFIG.h"
 
 #ifdef UNIVCORE_3DS_SIZE
-#define SCALE_3DS(Pos) Pos = (Pos * 4 / 5)
+	#define SCALE_3DS(Pos) Pos = (Pos * 4 / 5)
 #else
-#define SCALE_3DS(Pos)
+	#define SCALE_3DS(Pos)
+#endif
+
+#ifndef UNIVCORE_FONT_COUNT
+	#define UNIVCORE_FONT_COUNT 3
 #endif
 
 // TODO: Maybe change these, they need to be C2D's flags atm to be compatible with 3DS Universal-Core
@@ -93,9 +97,9 @@ namespace Gui {
 		Initialize the GUI.
 		Call this when initializing.
 
-		FontPaths: The locations to check for the font.
+		FontPaths: The locations to check for the fonts.
 	*/
-	bool init(const std::vector<std::string> &FontPaths);
+	bool init(const std::array<std::vector<std::string>, UNIVCORE_FONT_COUNT> &FontPaths);
 
 	/*
 		Load a Font. (NFTR)
@@ -109,15 +113,15 @@ namespace Gui {
 	/*
 		Reinit the GUI.
 
-		FontPaths: The locations to check for the font.
+		FontPaths: The locations to check for the fonts.
 	*/
-	bool reinit(const std::vector<std::string> &FontPaths);
+	bool reinit(const std::array<std::vector<std::string>, UNIVCORE_FONT_COUNT> &FontPaths);
 
 	/*
 		Draws a centered String.
 		x: The X Offset from center. (Center: 200 px on top, 160 px on Bottom.)
 		y: The Y Position of the Text.
-		size: The size of the Text.
+		size: The size of the Text, unused when custom font used.
 		color: The color of the Text.
 		Text: The Text which should be displayed.
 		maxWidth: The maxWidth for the Text. (Optional!)
@@ -125,7 +129,7 @@ namespace Gui {
 		fnt: The Font which should be used. Uses default font by default. (Optional!)
 		int flags: C2D text flags to use. (Optional!)
 	*/
-	void DrawStringCentered(int x, int y, float size, u8 color, const std::string &Text, int maxWidth = 0, int maxHeight = 0, Font *fnt = nullptr, int flags = 0);
+	void DrawStringCentered(int x, int y, u8 size, u8 color, const std::string &Text, float maxWidth = 0.0f, float maxHeight = 0.0f, Font *fnt = nullptr, int flags = 0);
 
 	/*
 		Draws a String.
@@ -140,7 +144,7 @@ namespace Gui {
 		fnt: The Font which should be used. Uses default font by default. (Optional!)
 		flags: C2D text flags to use.
 	*/
-	void DrawString(int x, int y, float size, u8 color, const std::string &Text, int maxWidth = 0, int maxHeight = 0, Font *fnt = nullptr, int flags = 0);
+	void DrawString(int x, int y, u8 size, u8 color, const std::string &Text, float maxWidth = 0.0f, float maxHeight = 0.0f, Font *fnt = nullptr, int flags = 0);
 
 	/*
 		Get the width of a String.
@@ -149,7 +153,7 @@ namespace Gui {
 		Text: The Text where the width should be getted from.
 		fnt: The Font which should be used. Uses default font by default. (Optional!)
 	*/
-	int GetStringWidth(float size, const std::string &Text, Font *fnt = nullptr);
+	int GetStringWidth(u8 size, const std::string &Text, Font *fnt = nullptr);
 
 	/*
 		Get the height of a String.
@@ -158,7 +162,7 @@ namespace Gui {
 		Text: The Text where the height should be getted from.
 		fnt: The Font which should be used. Uses default font by default. (Optional!)
 	*/
-	int GetStringHeight(float size, const std::string &Text, Font *fnt = nullptr);
+	int GetStringHeight(u8 size, const std::string &Text, Font *fnt = nullptr);
 
 
 	/*
@@ -170,7 +174,7 @@ namespace Gui {
 		Text: The Text where the size should be getted from.
 		fnt: The Font which should be used. Uses default font by default. (Optional!)
 	*/
-	void GetStringSize(float size, int *width, int *height, const std::string &Text, Font *fnt = nullptr);
+	void GetStringSize(u8 size, int *width, int *height, const std::string &Text, Font *fnt = nullptr);
 
 	/*
 		Draw a Rectangle.

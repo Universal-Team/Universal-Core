@@ -5,6 +5,7 @@ This contains the GUI & Core part for our DS(i) Applications.
 #define the following in `UNIVCORE_CONFIG.h` to alter specific things.
 - `UNIVCORE_TEXT_BUFFERED` to have the text be first rendered to a buffer before drawing to the screen with Font::update()
 - `UNIVCORE_3DS_SIZE` to make all X and Y positions use the 3DS resolution
+- `UNIVCORE_FONT_COUNT` the number of font sizes to load, default 3 (Large, Medium, Small)
 
 Logo created by: [TotallyNotGuy](https://github.com/TotallyNotGuy).
 
