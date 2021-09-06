@@ -30,11 +30,10 @@
 #include "tonccpy.h"
 
 #ifdef UNIVCORE_TEXT_BUFFERED
-u8 Font::textBuf[2][256 * 192];
+	u8 Font::textBuf[2][256 * 192];
 #endif
 
 Font::Font(const std::vector<std::string> &paths) {
-
 	FILE *file = nullptr;
 	for(const auto &path : paths) {
 		file = fopen(path.c_str(), "rb");
@@ -330,11 +329,11 @@ ITCM_CODE void Font::print(std::u16string_view text, int x, int y, Alignment ali
 		} else {
 			width = 256;
 			height = 192;
-#ifdef UNIVCORE_TEXT_BUFFERED
-			dstBegin = textBuf[currentScreen];
-#else
-			dstBegin = (u8 *)bgGetGfxPtr(Gui::top ? 2 : 6);
-#endif
+			#ifdef UNIVCORE_TEXT_BUFFERED
+				dstBegin = textBuf[currentScreen];
+			#else
+				dstBegin = (u8 *)bgGetGfxPtr(currentScreen ? 3 : 7);
+			#endif
 		}
 		dstBegin += y * width + x + fontWidths[(index * 3)];
 
@@ -369,9 +368,9 @@ ITCM_CODE void Font::print(std::u16string_view text, int x, int y, Alignment ali
 }
 
 #ifdef UNIVCORE_TEXT_BUFFERED
-void Font::clear(bool top) { dmaFillWords(0, Font::textBuf[top], 256 * 192); }
+	void Font::clear(bool top) { dmaFillWords(0, Font::textBuf[top], 256 * 192); }
 
-void Font::update(bool top) {
-	tonccpy(bgGetGfxPtr(top ? 2 : 6), Font::textBuf[top], 256 * 192);
-}
+	void Font::update(bool top) {
+		tonccpy(bgGetGfxPtr(top ? 2 : 6), Font::textBuf[top], 256 * 192);
+	}
 #endif

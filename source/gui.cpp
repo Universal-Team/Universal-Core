@@ -86,11 +86,15 @@ void Gui::clearScreen(bool top) {
 }
 
 void Gui::clearTextBufs(void) {
-	Font::clear();
+	#ifdef UNIVCORE_TEXT_BUFFERED
+		Font::clear();
+	#endif
 }
 
 void Gui::updateTextBufs(bool top) {
-	Font::update(top);
+	#ifdef UNIVCORE_TEXT_BUFFERED
+		Font::update(top);
+	#endif
 }
 
 void Gui::DrawSprite(Spritesheet &sheet, size_t imgindex, int x, int y, float ScaleX, float ScaleY) {
@@ -121,8 +125,13 @@ void Gui::DrawStringCentered(int x, int y, u8 size, u8 color, const std::string 
 void Gui::DrawString(int x, int y, u8 size, u8 color, const std::string &Text, float maxWidth, float maxHeight, Font *fnt, int flags) {
 	if (!fnt && size >= DefaultFonts.size()) return;
 
-	float heightScale = maxHeight == 0 ? 1.0f : std::min(1.0f, maxHeight / Gui::GetStringHeight(size, Text, fnt));
-	float widthScale = maxWidth == 0 ? 1.0f : std::min(1.0f, maxWidth / Gui::GetStringWidth(size, Text, fnt));
+	#ifdef UNIVCORE_3DS_SIZE
+		float heightScale = maxHeight == 0 ? 1.0f : std::min(1.0f, (maxWidth * 4 / 5) / Gui::GetStringHeight(size, Text, fnt));
+		float widthScale = maxWidth == 0 ? 1.0f : std::min(1.0f, (maxWidth * 4 / 5) / Gui::GetStringWidth(size, Text, fnt));
+	#else
+		float heightScale = maxHeight == 0 ? 1.0f : std::min(1.0f, maxHeight / Gui::GetStringHeight(size, Text, fnt));
+		float widthScale = maxWidth == 0 ? 1.0f : std::min(1.0f, maxWidth / Gui::GetStringWidth(size, Text, fnt));
+	#endif
 
 	// TODO: Wrapping and such
 	(fnt ? *fnt : *DefaultFonts[size]).print(x, y, Text, flags & C2D_AlignCenter ? Alignment::center : (flags & C2D_AlignRight ? Alignment::right : Alignment::left), color, maxWidth, widthScale, heightScale);
