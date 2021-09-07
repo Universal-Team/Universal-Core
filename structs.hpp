@@ -28,6 +28,7 @@
 #define _UNIVERSAL_CORE_STRUCTS_HPP
 
 #include <string>
+#include <3ds/types.h>
 #include <3ds/services/hid.h>
 
 class Structs {
