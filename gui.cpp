@@ -43,7 +43,6 @@ bool fadeout = false, fadein = false, fadeout2 = false, fadein2 = false;
 int fadealpha = 0;
 int fadecolor = 0;
 CFG_Region loadedSystemFont = (CFG_Region)-1;
-float fontScaleFix = 1.0f;
 
 /*
 	Clear the Text Buffer.
@@ -90,7 +89,6 @@ Result Gui::init(CFG_Region fontRegion) {
 
 	/* Load Textbuffer. */
 	TextBuf = C2D_TextBufNew(4096);
-	fontScaleFix = C2D_FontGetInfo(nullptr)->tglp->cellHeight / 30.0f;
 	loadSystemFont(fontRegion);
 	return 0;
 }
@@ -217,20 +215,11 @@ void Gui::DrawString(float x, float y, float size, u32 color, const std::string 
 
 	C2D_TextOptimize(&c2d_text);
 
-	// Fix Citro2D messing up font scales on Chinese / Taiwanese / Korean consoles
-	size *= fontScaleFix;
-
 	if(!fnt) {
 		switch(loadedSystemFont) {
 			case CFG_REGION_CHN:
-				size *= 1.1f;
-				y += 3.0f * size;
-				break;
 			case CFG_REGION_KOR:
-				y += 3.0f * size;
-				break;
 			case CFG_REGION_TWN:
-				size *= 1.4f;
 				y += 3.0f * size;
 				break;
 			default:
