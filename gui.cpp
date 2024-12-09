@@ -25,14 +25,13 @@
 */
 
 #include "gui.hpp"
-#include "screenCommon.hpp"
 
 #include <3ds.h>
 #include <stack>
 #include <unistd.h>
 #include <vector>
 
-C3D_RenderTarget *Top, *TopRight, *Bottom;
+C3D_RenderTarget *ScreenTop, *ScreenTopRight, *ScreenBottom;
 
 C2D_TextBuf TextBuf;
 C2D_Font Font;
@@ -83,9 +82,9 @@ Result Gui::init(CFG_Region fontRegion) {
 	C2D_Prepare();
 
 	/* Create Screen Targets. */
-	Top = C2D_CreateScreenTarget(GFX_TOP, GFX_LEFT);
-	TopRight = C2D_CreateScreenTarget(GFX_TOP, GFX_RIGHT);
-	Bottom = C2D_CreateScreenTarget(GFX_BOTTOM, GFX_LEFT);
+	ScreenTop = C2D_CreateScreenTarget(GFX_TOP, GFX_LEFT);
+	ScreenTopRight = C2D_CreateScreenTarget(GFX_TOP, GFX_RIGHT);
+	ScreenBottom = C2D_CreateScreenTarget(GFX_BOTTOM, GFX_LEFT);
 
 	/* Load Textbuffer. */
 	TextBuf = C2D_TextBufNew(4096);
@@ -491,7 +490,7 @@ void Gui::screenBack2() { if (screens.size() > 0) screens.pop(); };
 */
 void Gui::ScreenDraw(C3D_RenderTarget *screen) {
 	C2D_SceneBegin(screen);
-	currentScreen = (screen == Top || screen == TopRight) ? 1 : 0;
+	currentScreen = (screen == ScreenTop || screen == ScreenTopRight) ? 1 : 0;
 }
 
 /*

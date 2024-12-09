@@ -25,7 +25,8 @@
  */
 
 #include "keyboard.hpp"
-#include "screenCommon.hpp"
+
+#include "gui.hpp"
 
 std::string UCKeyboard::GetString(uint32_t MaxSize, const std::string &Hint) const {
 	C3D_FrameEnd(0); // Needed, so the system will not freeze.

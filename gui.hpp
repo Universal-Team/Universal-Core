@@ -33,6 +33,11 @@
 #include <citro2d.h>
 #include <citro3d.h>
 
+extern bool currentScreen;
+extern C3D_RenderTarget *ScreenTop, *ScreenTopRight, *ScreenBottom;
+extern bool fadeout, fadein, fadeout2, fadein2;
+extern int fadealpha, fadecolor;
+
 namespace Gui {
 	/*
 		Clear the Text Buffer.
