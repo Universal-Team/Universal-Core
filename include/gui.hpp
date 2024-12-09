@@ -37,6 +37,14 @@
 
 #include "UNIVCORE_CONFIG.h"
 
+#define ScreenTop 1
+#define ScreenTopRight 1
+#define ScreenBottom 0
+
+extern bool currentScreen;
+extern bool fadeout, fadein, fadeout2, fadein2;
+extern int fadealpha, fadecolor;
+
 #ifdef UNIVCORE_3DS_SIZE
 	#define SCALE_3DS(Pos) Pos = (Pos * 4 / 5)
 #else
@@ -236,7 +244,7 @@ namespace Gui {
 	/*
 		Set on which screen to draw.
 
-		top: Whether to draw on the top. (3DS Universal-Core compatible targets are inside the screenCommon.hpp file.)
+		top: Whether to draw on the top.
 	*/
 	void ScreenDraw(bool top);
 

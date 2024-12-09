@@ -26,7 +26,7 @@
 
 #include "font.hpp"
 
-#include "screenCommon.hpp"
+#include "gui.hpp"
 #include "tonccpy.h"
 
 #ifdef UNIVCORE_TEXT_BUFFERED

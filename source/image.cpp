@@ -26,7 +26,7 @@
 
 #include "image.hpp"
 
-#include "screenCommon.hpp"
+#include "gui.hpp"
 #include "tonccpy.h"
 
 #include <nds/bios.h>
