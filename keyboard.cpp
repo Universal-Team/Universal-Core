@@ -27,7 +27,7 @@
 #include "keyboard.hpp"
 #include "screenCommon.hpp"
 
-std::string UCKeyboard::GetString(uint MaxSize, const std::string &Hint) const {
+std::string UCKeyboard::GetString(uint32_t MaxSize, const std::string &Hint) const {
 	C3D_FrameEnd(0); // Needed, so the system will not freeze.
 
 	SwkbdState state;
@@ -43,10 +43,10 @@ std::string UCKeyboard::GetString(uint MaxSize, const std::string &Hint) const {
 }
 
 
-uint UCKeyboard::GetInt(uint Max, const std::string &Text) const {
+uint32_t UCKeyboard::GetInt(uint32_t Max, const std::string &Text) const {
 	C3D_FrameEnd(0); // Needed, so the system will not freeze.
 
-	uint Digits = 0;
+	uint32_t Digits = 0;
 	while(Max / (int)pow(10, Digits)) Digits++;
 
 

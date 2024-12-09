@@ -53,14 +53,14 @@ public:
 	 * @param maxSize The maximum size *in bytes*, set to 0 for no limit.
 	 * @param Hint The hint text.
 	 */
-	std::string GetString(uint MaxSize, const std::string &Hint) const;
+	std::string GetString(uint32_t MaxSize, const std::string &Hint) const;
 
 	/**
 	 * @brief Gets an int from user input.
 	 * @param maxSize The maximum size of the number, set to 0 for no limit.
 	 * @param Hint The hint text.
 	 */
-	uint GetInt(uint Max, const std::string &Hint) const;
+	uint32_t GetInt(uint32_t Max, const std::string &Hint) const;
 };
 
 #endif
