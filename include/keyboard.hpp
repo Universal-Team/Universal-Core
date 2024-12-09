@@ -43,13 +43,13 @@ public:
 
 private:
 	struct Key {
-		enum class Property : uint8_t { Invalid, Action, Mode, Value };
+		enum class Property : u8 { Invalid, Action, Mode, Value };
 
 		Structs::ButtonPos Pos;
 		std::string Label;
 		std::map<Property, std::string> Properties = { };
 		bool Active = false;
-		uint32_t Button = 0;
+		u32 Button = 0;
 
 		Key(Structs::ButtonPos Pos, const std::string &Label) : Pos(Pos), Label(Label) { };
 	};
@@ -59,7 +59,7 @@ private:
 		bool Ret = false;
 	};
 
-	uint8_t BgColor, BarColor, OutlineColor, KeyColor, KeyColorPressed, KeyColorActive, TextColor, HintColor;
+	u8 BgColor, BarColor, OutlineColor, KeyColor, KeyColorPressed, KeyColorActive, TextColor, HintColor;
 
 	bool Loaded = false;
 
@@ -69,11 +69,11 @@ private:
 
 	std::string CurrentString = "";
 	int Cursor = 0;
-	uint MaxSize = 0;
+	u32 MaxSize = 0;
 	Status CurrentStatus = Status::Active;
 
-	uint8_t GetCharSize(void) const;
-	uint8_t GetPrevCharSize(void) const;
+	u8 GetCharSize(void) const;
+	u8 GetPrevCharSize(void) const;
 
 	void HandleKeyPress(const Key &Key);
 	void SwitchLayout() const;
@@ -90,7 +90,7 @@ public:
 	 * @param TextColor The text color.
 	 * @param HintColor The hint text color.
 	 */
-	UCKeyboard(const std::string &KeyboardJSON, uint8_t BgColor, uint8_t BarColor, uint8_t OutlineColor, uint8_t KeyColor, uint8_t KeyColorPressed, uint8_t KeyColorActive, uint8_t TextColor, uint8_t HintColor);
+	UCKeyboard(const std::string &KeyboardJSON, u8 BgColor, u8 BarColor, u8 OutlineColor, u8 KeyColor, u8 KeyColorPressed, u8 KeyColorActive, u8 TextColor, u8 HintColor);
 
 	~UCKeyboard(void) { };
 
@@ -100,7 +100,7 @@ public:
 	 * @param Repeat The value from keysDownRepeat().
 	 * @param T The value from touchRead().
 	 */
-	void Draw(uint32_t Held, uint32_t Repeat, touchPosition T) const;
+	void Draw(u32 Held, u32 Repeat, touchPosition T) const;
 
 	/**
 	 * @brief Handles keyboard actions, use with Draw() for live input.
@@ -108,7 +108,7 @@ public:
 	 * @param Repeat The value from keysDownRepeat().
 	 * @param T The value from touchRead().
 	 */
-	void Handler(uint32_t Held, uint32_t Repeat, touchPosition T);
+	void Handler(u32 Held, u32 Repeat, touchPosition T);
 
 	/**
 	 * @brief Gets the current string for use in live input mode.
@@ -125,14 +125,14 @@ public:
 	 * @param maxSize The maximum size *in bytes*, set to 0 for no limit.
 	 * @param Hint The hint text.
 	 */
-	std::string GetString(uint MaxSize, const std::string &Hint);
+	std::string GetString(u32 MaxSize, const std::string &Hint);
 
 	/**
 	 * @brief Gets an int from user input.
 	 * @param maxSize The maximum size of the number, set to 0 for no limit.
 	 * @param Hint The hint text.
 	 */
-	uint GetInt(uint Max, const std::string &Hint);
+	u32 GetInt(u32 Max, const std::string &Hint);
 };
 
 #endif

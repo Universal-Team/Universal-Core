@@ -32,7 +32,7 @@
 
 #include <unistd.h>
 
-UCKeyboard::UCKeyboard(const std::string &KeyboardJSON, uint8_t BgColor, uint8_t BarColor, uint8_t OutlineColor, uint8_t KeyColor, uint8_t KeyColorPressed, uint8_t KeyColorActive, uint8_t TextColor, uint8_t HintColor) : BgColor(BgColor), BarColor(BarColor), OutlineColor(OutlineColor), KeyColor(KeyColor), KeyColorPressed(KeyColorPressed), KeyColorActive(KeyColorActive), TextColor(TextColor), HintColor(HintColor) {
+UCKeyboard::UCKeyboard(const std::string &KeyboardJSON, u8 BgColor, u8 BarColor, u8 OutlineColor, u8 KeyColor, u8 KeyColorPressed, u8 KeyColorActive, u8 TextColor, u8 HintColor) : BgColor(BgColor), BarColor(BarColor), OutlineColor(OutlineColor), KeyColor(KeyColor), KeyColorPressed(KeyColorPressed), KeyColorActive(KeyColorActive), TextColor(TextColor), HintColor(HintColor) {
 	FILE *File = fopen(KeyboardJSON.c_str(), "rt");
 
 	if (File) {
@@ -62,7 +62,7 @@ UCKeyboard::UCKeyboard(const std::string &KeyboardJSON, uint8_t BgColor, uint8_t
 						if (Key.value().is_array() && Key.value().size() >= 4) {
 							bool Good = true;
 
-							for (uint8_t Idx = 0; Idx < 4; Idx++) {
+							for (u8 Idx = 0; Idx < 4; Idx++) {
 								if (!Key.value()[Idx].is_number()) {
 									Good = false;
 									break;
@@ -124,7 +124,7 @@ UCKeyboard::UCKeyboard(const std::string &KeyboardJSON, uint8_t BgColor, uint8_t
 	};
 };
 
-uint8_t UCKeyboard::GetCharSize(void) const {
+u8 UCKeyboard::GetCharSize(void) const {
 	const char *Str = this->CurrentString.c_str() + Cursor;
 	do {
 		Str++;
@@ -133,7 +133,7 @@ uint8_t UCKeyboard::GetCharSize(void) const {
 	return Str - (this->CurrentString.c_str() + Cursor);
 }
 
-uint8_t UCKeyboard::GetPrevCharSize(void) const {
+u8 UCKeyboard::GetPrevCharSize(void) const {
 	const char *Str = this->CurrentString.c_str() + Cursor;
 	do {
 		Str--;
@@ -142,7 +142,7 @@ uint8_t UCKeyboard::GetPrevCharSize(void) const {
 	return this->CurrentString.c_str() + Cursor - Str;
 }
 
-void UCKeyboard::Draw(uint32_t Held, uint32_t Repeat, touchPosition T) const {
+void UCKeyboard::Draw(u32 Held, u32 Repeat, touchPosition T) const {
 	Gui::clearTextBufs();
 
 	/* A sub menu or so? */
@@ -183,7 +183,7 @@ void UCKeyboard::SwitchLayout() const {
 };
 
 
-void UCKeyboard::Handler(uint32_t Held, uint32_t Repeat, touchPosition T) {
+void UCKeyboard::Handler(u32 Held, u32 Repeat, touchPosition T) {
 	/* Handle Load. */
 	if (!this->Loaded)
 		return;
@@ -301,7 +301,7 @@ void UCKeyboard::HandleKeyPress(const Key &Key) {
 	};
 };
 
-std::string UCKeyboard::GetString(uint MaxSize, const std::string &Hint) {
+std::string UCKeyboard::GetString(u32 MaxSize, const std::string &Hint) {
 	this->MaxSize = MaxSize == 0 ? 0xFFFFFFFF : 0;
 
 	u32 Held = 0, Repeat = 0;

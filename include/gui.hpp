@@ -32,6 +32,7 @@
 #include "sprite.hpp"
 #include "spritesheet.hpp"
 
+#include <array>
 #include <nds/ndstypes.h>
 
 #include "UNIVCORE_CONFIG.h"

@@ -26,6 +26,7 @@
 
 #include "spritesheet.hpp"
 
+#include <algorithm>
 #include <nds.h>
 
 Image Spritesheet::_blank = Image(nullptr, 0);
