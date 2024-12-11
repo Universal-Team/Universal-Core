@@ -153,21 +153,21 @@ void Image::draw(int x, int y, float scaleX, float scaleY, bool skipAlpha) const
 		if(skipAlpha) {
 			for(u32 i = 0; i < _height; i++) {
 				const u8 *src = _bitmap.data() + i * _widthAligned;
-				u8 *dst = (u8 *)bgGetGfxPtr(currentScreen ? 3 : 7) + (y + i) * 256 + x;
+				u8 *dst = (u8 *)Gui::getBgPtr(currentScreen) + (y + i) * 256 + x;
 				for(u32 j = 0; j < _width; j++) {
 					if(_palette[src[j] - _paletteStart] & 0x8000)
 						toncset(dst + j, src[j], 1);
 				}
 			}
 		} else {
-			u8 *dst = (u8 *)bgGetGfxPtr(currentScreen ? 3 : 7) + y * 256 + x;
+			u8 *dst = (u8 *)Gui::getBgPtr(currentScreen) + y * 256 + x;
 			for(u32 i = 0; i < _height; i++) {
 				tonccpy(dst + i * 256, _bitmap.data() + i * _widthAligned, _width);
 			}
 		}
 	} else {
 		for(u32 i = 0; i < _height * scaleY; i++) {
-			u8 *dst = (u8 *)bgGetGfxPtr(currentScreen ? 3 : 7) + (y + i) * 256 + x;
+			u8 *dst = (u8 *)Gui::getBgPtr(currentScreen) + (y + i) * 256 + x;
 			for(u32 j = 0; j < _width * scaleX; j++) {
 				u8 px = _bitmap[int(i / scaleY) * _widthAligned + int(j / scaleX)];
 				if(_palette[px - _paletteStart] & 0x8000 || !skipAlpha)
@@ -186,7 +186,7 @@ void Image::drawSegment(int x, int y, int imageX, int imageY, int w, int h, floa
 		if(skipAlpha) {
 			for(int i = 0; i < h; i++) {
 				const u8 *src = _bitmap.data() + i * _widthAligned;
-				u8 *dst = (u8 *)bgGetGfxPtr(currentScreen ? 3 : 7) + (y + i) * 256 + x;
+				u8 *dst = (u8 *)Gui::getBgPtr(currentScreen) + (y + i) * 256 + x;
 				for(int j = 0; j < w; j++) {
 					if(_palette[src[j] - _paletteStart] & 0x8000)
 						toncset(dst + j, src[j], 1);
@@ -194,13 +194,13 @@ void Image::drawSegment(int x, int y, int imageX, int imageY, int w, int h, floa
 			}
 		} else {
 			for(int i = 0; i < h; i++) {
-				tonccpy((u8 *)bgGetGfxPtr(currentScreen ? 3 : 7) + (y + i) * 256 + x,
+				tonccpy((u8 *)Gui::getBgPtr(currentScreen) + (y + i) * 256 + x,
 						_bitmap.data() + (imageY + i) * _widthAligned + imageX, w);
 			}
 		}
 	} else {
 		for(u32 i = 0; i < h * scaleY; i++) {
-			u8 *dst = (u8 *)bgGetGfxPtr(currentScreen ? 3 : 7) + (y + i) * 256 + x;
+			u8 *dst = (u8 *)Gui::getBgPtr(currentScreen) + (y + i) * 256 + x;
 			for(u32 j = 0; j < w * scaleX; j++) {
 				u8 px = _bitmap[(imageY + int(i / scaleY)) * _widthAligned + imageX + int(j / scaleX)];
 				if(_palette[px - _paletteStart] & 0x8000 || !skipAlpha)

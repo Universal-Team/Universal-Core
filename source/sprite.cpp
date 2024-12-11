@@ -196,7 +196,7 @@ void Sprite::drawImage(int x, int y, const Image &image, float scaleX, float sca
 		for(int i = 0; i < image.height(); i++) {
 			for(int j = 0; j < image.width(); j++) {
 				u16 px = image[i * image.width() + j];
-				if(px & 0x8000)
+				// if(px & 0x8000)
 					_gfx[(y + i) * _height + x + j] = px;
 			}
 		}
@@ -204,7 +204,7 @@ void Sprite::drawImage(int x, int y, const Image &image, float scaleX, float sca
 		for(int i = 0; i < image.height() * scaleY; i++) {
 			for(int j = 0; j < image.width() * scaleX; j++) {
 				u16 px = image[int(i / scaleY) * image.width() + int(j / scaleX)];
-				if(px & 0x8000)
+				// if(px & 0x8000)
 					_gfx[(y + i) * _height + j + x] = px;
 			}
 		}

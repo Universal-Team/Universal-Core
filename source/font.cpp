@@ -154,7 +154,7 @@ u16 Font::charIndex(char16_t c) const {
 std::u16string Font::utf8to16(std::string_view text) {
 	std::u16string out;
 	for(uint i = 0; i < text.size();) {
-		char16_t c;
+		char16_t c = 0;
 		if(!(text[i] & 0x80)) {
 			c = text[i++];
 		} else if((text[i] & 0xE0) == 0xC0) {
@@ -209,7 +209,7 @@ ITCM_CODE void Font::print(std::u16string_view text, int x, int y, Alignment ali
 			}
 
 			SCALE_3DS(x);
-			x += ((sprite ? sprite->width() : 256) - (calcWidth(text) * scaleX)) / 2;
+			x += ((sprite ? sprite->width() : SCREEN_WIDTH) - (calcWidth(text) * scaleX)) / 2;
 			break;
 		}
 		case Alignment::right: {
@@ -327,12 +327,12 @@ ITCM_CODE void Font::print(std::u16string_view text, int x, int y, Alignment ali
 			height = sprite->height();
 			dstBegin = (u8 *)sprite->gfx();
 		} else {
-			width = 256;
-			height = 192;
+			width = SCREEN_WIDTH;
+			height = SCREEN_HEIGHT;
 			#ifdef UNIVCORE_TEXT_BUFFERED
 				dstBegin = textBuf[currentScreen];
 			#else
-				dstBegin = (u8 *)bgGetGfxPtr(currentScreen ? 3 : 7);
+				dstBegin = (u8 *)Gui::getBgPtr(currentScreen);
 			#endif
 		}
 		dstBegin += y * width + x + fontWidths[(index * 3)];
@@ -371,6 +371,6 @@ ITCM_CODE void Font::print(std::u16string_view text, int x, int y, Alignment ali
 	void Font::clear(bool top) { dmaFillWords(0, Font::textBuf[top], 256 * 192); }
 
 	void Font::update(bool top) {
-		tonccpy(bgGetGfxPtr(top ? 2 : 6), Font::textBuf[top], 256 * 192);
+		tonccpy(Gui::getBgPtr(currentScreen), Font::textBuf[top], 256 * 192);
 	}
 #endif

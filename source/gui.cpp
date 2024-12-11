@@ -37,7 +37,7 @@
 std::array<std::unique_ptr<Font>, UNIVCORE_FONT_COUNT> DefaultFonts;
 std::unique_ptr<Screen> usedScreen, tempScreen; // tempScreen used for "fade" effects.
 std::stack<std::unique_ptr<Screen>> screens;
-bool currentScreen = false;
+bool currentScreen = 0, currentBuffer = 0;
 bool fadeout = false, fadein = false, fadeout2 = false, fadein2 = false;
 int fadealpha = 0;
 int fadecolor = 0;
@@ -62,12 +62,16 @@ bool Gui::init(const std::array<std::vector<std::string>, UNIVCORE_FONT_COUNT> &
 
 	bgInit(2, BgType_Bmp8, BgSize_B8_256x256, 3, 0);
 	bgSetPriority(2, 2);
+	bgHide(2);
 
 	bgInitSub(3, BgType_Bmp8, BgSize_B8_256x256, 0, 0);
 	bgSetPriority(7, 3);
 
 	bgInitSub(2, BgType_Bmp8, BgSize_B8_256x256, 3, 0);
 	bgSetPriority(6, 2);
+	bgHide(6);
+
+	bgUpdate();
 
 	// Set main background as target for sprite transparency
 	REG_BLDCNT     = 1 << 11;
@@ -81,8 +85,23 @@ bool Gui::init(const std::array<std::vector<std::string>, UNIVCORE_FONT_COUNT> &
 	return true;
 }
 
+u16 *Gui::getBgPtr(bool top) {
+	static int bgId[2][2] = {{6, 2}, {7, 3}};
+	return bgGetGfxPtr(bgId[currentBuffer][top]);
+}
+
+void Gui::swapBuffers() {
+	bgHide(currentBuffer ? 2 : 3);
+	bgHide(currentBuffer ? 6 : 7);
+	bgShow(currentBuffer ? 3 : 2);
+	bgShow(currentBuffer ? 7 : 6);
+	bgUpdate();
+
+	currentBuffer = !currentBuffer;
+}
+
 void Gui::clearScreen(bool top) {
-	toncset(bgGetGfxPtr(currentScreen ? 3 : 7), 0, 256 * 192);
+	toncset(Gui::getBgPtr(currentScreen), 0, 256 * 192);
 }
 
 void Gui::clearTextBufs(void) {
@@ -171,7 +190,7 @@ void Gui::Draw_Rect(int x, int y, int w, int h, u8 color) {
 	SCALE_3DS(w);
 	SCALE_3DS(h);
 
-	u8 *dst = (u8 *)bgGetGfxPtr(currentScreen ? 3 : 7);
+	u8 *dst = (u8 *)Gui::getBgPtr(currentScreen);
 	for(int i = 0; i < h; i++) {
 		toncset(dst + ((y + i) * 256 + x), color, w);
 	}

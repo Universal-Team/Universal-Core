@@ -68,6 +68,10 @@ enum {
 };
 
 namespace Gui {
+	u16 *getBgPtr(bool top);
+
+	void swapBuffers(void);
+
 	/*
 		Clear the Text Buffer.
 	*/
